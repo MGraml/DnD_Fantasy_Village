@@ -81,6 +81,15 @@ function switchWindows(offset) {
     show(btns_top[(getUnhidden(tbls)+offset)%3].dataset.table,tbls);
 }
 
+//subfunction for Manual
+function manualCall() {
+    document.createElement("a").href = window.open('./src/manual.html','manual','height=700,width=500')
+};
+
+//Initializes the moon and sun functionality
+document.querySelector("#primary").addEventListener("click", () => DataAs.weekPassed());
+document.querySelector("#secondary").addEventListener("click", () => { manualCall(); });
+
 //Include keyboard
 document.onkeydown = function(e) {e.repeat ? {} : ( keyPressed(e))};
 function keyPressed(e) {
@@ -128,18 +137,5 @@ function keyPressed(e) {
     e.preventDefault(); // Sperrt Standardaktion (zB Hilfe bei F1)
 };
 
-//subfunction for Manual
-function manualCall() {
-    document.createElement("a").href = window.open('./src/manual.html','manual','height=700,width=500')
-};
-
-//Initializes the moon and sun functionality
-document.querySelector("#primary").addEventListener("click", () => DataAs.weekPassed());
-document.querySelector("#secondary").addEventListener("click", () => { manualCall(); });
-
-
-
 //Loads the main file
 let DataAs = new Database();
-
-

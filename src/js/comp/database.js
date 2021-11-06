@@ -32,14 +32,16 @@ export class Database {
         //this.initDatabase();
         
 
-        //Initializes the Settings button (which wont run without data!)
-        this.initSettings();
+        
         //If there is data available, the "json needed" message is cleared
         this.getAllGoods().then((goods)=>{
             if (Object.keys(goods).length > 0) {
                 this.update();
             }
         })
+
+        //Initializes the Settings button (which wont run without data!)
+        this.initSettings();
     };
 
     //Initializes the Database with certain values - shouldnt be used anymore, since data is loaded via external json
@@ -87,15 +89,20 @@ export class Database {
 
     //Is called when important things happen and an update is necessary
     async update(){
+        //Decision, whether a database/json was loaded
         this.getAllGoods().then((goods)=>{
             if (Object.keys(goods).length > 0) {
                 let loadtxt = document.querySelector("#loadfirst");
                 loadtxt.className ="hidden";
             }});
+
+        //Update date on the book
         let root = document.documentElement;
         let time_aux = await this.db.time.get("Time");
         let str = "'"+"Assignan " + time_aux.week +"/"+time_aux.year + " p.F."+"'";
         root.style.setProperty('--accent-content',str);
+
+        //Update all databases gradually
         await this.createStatGoods();
         await this.createStatBuild();
         await this.computeWeeklyYield();
@@ -103,10 +110,11 @@ export class Database {
         await this.createStatGoods();
         await this.createStatTot();
         await this.initSettings();
+        await this.computeProdmodHousings();
+
         //Sets Information of hover over prodmod div
         let div_prodmod = document.getElementById("prodmod");
         div_prodmod.addEventListener("mouseover", async (el) => {
-            
             el.target.value="";
             el.target.pattern="(\d|(\d,\d{0,2}))";
             let capDB = await this.db.capacity.get("Capacity");
@@ -114,29 +122,29 @@ export class Database {
                             "\n\nDebuffs:"+ (capDB.negative_sources==="" ? "\n---" : capDB.negative_sources);
             el.target.title=titlestr
         });
-
     };
 
     //Initializing Settings page
     async initSettings() {
+        
+        //Manage line with items in settings screen
         await this.createItemsAdd();
         let add = document.getElementById("AddingGoods"),
             inputsItems = Array.from(add.querySelectorAll("input")),
             btn = add.querySelector("button"),
             ops = document.getElementById("opt");
-        let abort = false;
+        
         await btn.addEventListener("click", async () => {
             let inpValTot = inputsItems[1].value;
-            if(inputsItems[0].value.length === 0 || inputsItems[1].value.length === 0){
-                abort = true;
-            }
-            if (abort === false){
+            if(!(inputsItems[0].value.length === 0 || inputsItems[1].value.length === 0)){
                 if (ops.selectedOptions[0].text==="Remove") {
                      inpValTot *= -1;
-                }
+                };
                 await this.addGood(inputsItems[0].value,0,inpValTot*1,inputsItems[2].value*1,inputsItems[3].value*1,inputsItems[4].value*1);
-            }
+            };
         });
+
+        //Manage line with sources of income in settings screen
         await this.createBuildingsAdd();
         let buildAdd = document.getElementById("AddingBuilds"),
             inputsBuilds = Array.from(buildAdd.querySelectorAll("input")),
@@ -151,6 +159,74 @@ export class Database {
                         );  
         })
         
+    };
+
+    //Create menu for adding items in settings screen
+    async createItemsAdd() {
+        let container = document.getElementById("settings");
+        container.innerHTML="";
+        let head = document.createElement("h1"), Add = document.createElement("div");
+        Add.id = "AddingGoods"
+        head.innerHTML = "Add additional existing or completely new items";
+        container.appendChild(head);
+
+        //Options for already available items
+        let inpName = document.createElement("input");
+        let datalist = document.createElement("datalist");
+        let goods = await this.getAllGoods();
+        Object.keys(goods).forEach( name => {
+            this.createOption(datalist,name,"");
+        })
+        datalist.id = "goodlist"
+        inpName.setAttribute('list', "goodlist");
+        inpName.placeholder="Add new item's name"
+        inpName.type = "text"
+        inpName.required = true
+        inpName.id="inpName"
+        Add.appendChild(datalist);
+        Add.appendChild(inpName);
+
+        //Add or Remove possibility
+        let op = document.createElement("select");
+        this.createOption(op,0,"Add");
+        this.createOption(op,1,"Remove");
+        op.id ="opt";
+        Add.appendChild(op)
+
+        //Create number inputs via outsourced function
+        const placeholders = ["# of units (Storage!)","Value p.U.","Consumption Modifier","Luxury Modifier"],
+              ids          = ["inpTotal","inpVal","inpConsmod","inpLuxmod"],
+              titles       = ["In case of adding more items than available storage, you will add 0 units!",
+                              "Only necessary in case of new items, otherwise it can be left blank.",
+                              "Only necessary in case of new items, otherwise it can be left blank.\nHigher values means more importance, e.g.: Bread has 2, Beef and Fish 1",
+                              "Only necessary in case of new items, otherwise it can be left blank.\nHigher value means more productivity bonus, e.g.: 1 = 5%"],
+              required     = [true,false,false,false];
+        for (let k in placeholders) { this.createInput(Add,placeholders[k],ids[k],titles[k],required[k]) };
+        
+        let btn = document.createElement("button");
+        btn.innerHTML="▶"
+        Add.appendChild(btn)
+        container.appendChild(Add)
+    }; 
+
+    //Outsourced function for creating input fields
+    async createInput(container,placeholder,id,title,required) {
+        let inp            = document.createElement("input");
+        inp.placeholder    = placeholder
+        inp.type           = "number"
+        inp.id             = id
+        inp.required       = required
+        inp.pattern        = "(\d|(\d,\d{0,2}))";
+        inp.title          = title
+        container.appendChild(inp);
+    };
+
+    //Outsourced function for options
+    createOption(container,value,text) {
+        let option          = document.createElement("option");
+            option.value        = value;
+            option.innerText    = text;
+            container.appendChild(option);
     };
 
     //Create new buildings, which are not buildable, but possibly with variable worker number
@@ -170,63 +246,32 @@ export class Database {
 
 
         let optTotalYield = document.createElement("select"),
-            optionempty = document.createElement("option"),
-            optionHous = document.createElement("option"),
-            optionStorRes = document.createElement("option"),
-            optionStorFood = document.createElement("option");
-        optionempty.value = 0;
-        optionempty.innerText = "---"
-        optionempty.selected ="selected";
-        optionHous.innerText = "Housings";
-        optionStorRes.innerText = "Storage Resources";
-        optionStorRes.value ="StorRes";
-        optionStorFood.innerText = "Storage Food";
-        optionStorFood.value = "StorFood";
-        optTotalYield.appendChild(optionempty);
-        optTotalYield.appendChild(optionHous);
-        optTotalYield.appendChild(optionStorRes);
-        optTotalYield.appendChild(optionStorFood);
+            incomes = {};
+        builds.forEach(building => {incomes[building.name] = building.yield_const});
+        let values = this.getConstantYieldNames(incomes),
+            texts = ["---","Housings","Storage Resources","Storage Food"];
+        values.unshift(0);
+        for (let k in values) {
+            this.createOption(optTotalYield,values[k],texts[k]);
+        };
         Add.appendChild(optTotalYield)
 
-        let inpTotalYieldNumber = document.createElement("input");
-        inpTotalYieldNumber.placeholder="Constant Yield - Number"
-        inpTotalYieldNumber.type = "number"
-        inpTotalYieldNumber.id="inpTotalYieldNumber"
-        Add.appendChild(inpTotalYieldNumber);
+        this.createInput(Add,"Constant Yield - Number","inpTotalYieldNumber","",false)
 
-
-        let optWeeklyYield = document.createElement("select"),
-        optionemptyWeekly = document.createElement("option");
-        optionemptyWeekly.value = 0;
-        optionemptyWeekly.innerText = "---";
-        optionemptyWeekly.selected ="selected";
+        let optWeeklyYield = document.createElement("select");
+        this.createOption(optWeeklyYield,0,"---");
         let goods = await this.getAllGoods();
         Object.keys(goods).forEach(name => {
-            let optGood = document.createElement("option");
-            optGood.innerText = name;
-            optGood.value = name;
-            optWeeklyYield.appendChild(optGood);
+            this.createOption(optWeeklyYield,name,name);
         });
-        optWeeklyYield.appendChild(optionemptyWeekly);
         Add.appendChild(optWeeklyYield)
 
+        this.createInput(Add,"Weekly Income - Number","inpWeeklyYieldNumber","",false)
 
-        let inpWeeklyYieldNumber = document.createElement("input");
-        inpWeeklyYieldNumber.placeholder="Weekly Income - Number"
-        inpWeeklyYieldNumber.type = "number"
-        inpWeeklyYieldNumber.id="inpWeeklyYieldNumber"
-        Add.appendChild(inpWeeklyYieldNumber);
-
-        let op = document.createElement("select"),
-            option1 = document.createElement("option"),
-            option2 = document.createElement("option");
-        option1.innerText = "Number fixed to 1"
-        option1.value = false
-        option2.innerText = "Number variable";
-        option2.value = true
-        option2.selected = "selected";
-        op.appendChild(option1);
-        op.appendChild(option2);
+        let op = document.createElement("select");
+        this.createOption(op,true,"Number variable");
+        this.createOption(op,false,"Number fixed to 1");
+        
         op.id ="optionsVary";
         Add.appendChild(op)
 
@@ -237,89 +282,8 @@ export class Database {
         container.appendChild(Add);
     };
 
-    //Create necessary HTML in settings page
-    async createItemsAdd() {
-        let container = document.getElementById("settings");
-        container.innerHTML="";
-        let head = document.createElement("h1"), Add = document.createElement("div");
-        Add.id = "AddingGoods"
-        head.innerHTML = "Add additional existing or completely new items";
-        container.appendChild(head);
-
-        let inpName = document.createElement("input");
-        let datalist = document.createElement("datalist");
-        let goods = await this.getAllGoods();
-        Object.keys(goods).forEach( name => {
-            let opt = document.createElement("option");
-            opt.value = name;
-            datalist.appendChild(opt);
-        })
-        datalist.id = "goodlist"
-        inpName.setAttribute('list', "goodlist");
-        inpName.placeholder="Add new item's name"
-        inpName.type = "text"
-        inpName.required = true
-        inpName.id="inpName"
-        Add.appendChild(datalist);
-        Add.appendChild(inpName);
-
-        let op = document.createElement("select"),
-            option1 = document.createElement("option"),
-            option2 = document.createElement("option");
-        option1.value = 0;
-        option1.innerText = "Add";
-        op.appendChild(option1);
-        option2.value = 1;
-        option2.innerText = "Remove";
-        op.appendChild(option2);
-        op.id ="opt";
-        Add.appendChild(op)
-
-        let inpTotal = document.createElement("input");
-        inpTotal.placeholder="# of units (Storage!)"
-        inpTotal.type = "number"
-        inpTotal.id="inpTotal"
-        inpTotal.value="";
-        inpTotal.pattern="(\d|(\d,\d{0,2}))";
-        inpTotal.title="In case of adding more items than available storage, you will add 0 units!"
-        Add.appendChild(inpTotal);
-
-        let inpVal = document.createElement("input");
-        inpVal.placeholder="Value p.U."
-        inpVal.type = "number"
-        inpVal.id="inpVal"
-        inpVal.value="";
-        inpVal.pattern="(\d|(\d,\d{0,2}))";
-        inpVal.title="Only necessary in case of new items, otherwise it can be left blank."
-        Add.appendChild(inpVal);
-
-        let inpConsmod = document.createElement("input");
-        inpConsmod.placeholder="Consumption Modifier"
-        inpConsmod.type = "number"
-        inpConsmod.id="inpConsmod"
-        inpConsmod.value="";
-        inpConsmod.pattern="(\d|(\d,\d{0,2}))";
-        inpConsmod.title="Only necessary in case of new items, otherwise it can be left blank.\nHigher values means more importance, e.g.: Bread has 2, Beef and Fish 1"
-        Add.appendChild(inpConsmod);
-
-        let inpLuxmod = document.createElement("input");
-        inpLuxmod.placeholder="Luxury Modifier"
-        inpLuxmod.type = "number"
-        inpLuxmod.id="inpLuxmod"
-        inpLuxmod.value="";
-        inpLuxmod.pattern="(\d|(\d,\d{0,2}))";
-        inpLuxmod.title="Only necessary in case of new items, otherwise it can be left blank.\nHigher value means more productivity bonus, e.g.: 1 = 5%" 
-        Add.appendChild(inpLuxmod);
-
-        let btn = document.createElement("button");
-        btn.innerHTML="▶"
-        Add.appendChild(btn)
-        container.appendChild(Add)
-    };
-    
     //Takes care of correct year/month
     async timeManager() {
-        console.log("Called time Manager")
         let time = await this.db.time.get("Time");
         if (time.week === 41) {time.year +=1; time.week = 1} else {time.week += 1}
         await this.db.time.put(time)
@@ -337,6 +301,7 @@ export class Database {
                 if (goods[res].unstorable ) {
                     goods[res].total = 0;
                 }
+                //Manage food first
                 else if (goods[res].food ) {
                     if (goods[res].income > capDB.food - capDB.actfood ) {
                         goods[res].total += - capDB.actfood + capDB.food ;
@@ -348,6 +313,7 @@ export class Database {
                         goods[res].total += goods[res].income;
                     };
                 }
+                //then manage general resources
                 else {
                     if (goods[res].income > capDB.resources - capDB.actres ) {
                         goods[res].total += - capDB.actres + capDB.resources ;
@@ -361,10 +327,24 @@ export class Database {
                 };
             });
             await this.db.goods.bulkPut(Object.values(goods));
+
+            //Update growth of population
             popsDB.adult += 0.75*diplDB.actualfame;
             popsDB.infant+= 0.25*diplDB.actualfame;
             popsDB.total = popsDB.adult + popsDB.infant;
 
+            await this.db.population.put(popsDB);
+            await this.computeProdmodHousings();
+        })
+    };
+
+    //Computes prodmod housings
+    async computeProdmodHousings() {
+        return this.db.transaction("rw",this.db.population,this.db.capacity, async ()=>{
+            let popsDB = await this.db.population.get("Population"),
+            capDB = await this.db.capacity.get("Capacity");
+
+            //Debuff for production in case of missing housings
             if (popsDB.total > popsDB.housings){
                 capDB.prodmod_housings = - ((popsDB.total - popsDB.housings)*100 / popsDB.housings).toFixed(0);
             }
@@ -373,33 +353,35 @@ export class Database {
             };
             await this.db.population.put(popsDB);
             await this.db.capacity.put(capDB);
-        })
-    }
+        }).catch(err => {
+            console.error(err.stack)
+        });
+    };
 
     //Gathers information from subfunctions and executes them
     async weekPassed() {
         await this.update();
         await this.weekPassedComputations();
         await this.timeManager();
+        
         //Restrict sounds to the production modifier of the incoming week, not the passed one.
         this.update().then(async ()=>{
-        let cap_aux = await this.db.capacity.get("Capacity");
-        //Plays sound dependent on happiness in the village
-        
-        if (cap_aux.prodmod <= 50) {
-            let riotsnd = document.getElementById("riotingsound");
-            riotsnd.play();
-        }
-        else if (cap_aux.prodmod > 100) {
-            let cheersnd = document.getElementById("cheeringsound");
-            cheersnd.play();
-        }
-        else {
-            let snd = document.getElementById("roostersound");
-            snd.play();
-        };
+            let cap_aux = await this.db.capacity.get("Capacity");
+            
+            //Plays sound dependent on happiness in the village
+            if (cap_aux.prodmod <= 50) {
+                let riotsnd = document.getElementById("riotingsound");
+                riotsnd.play();
+            }
+            else if (cap_aux.prodmod > 100) {
+                let cheersnd = document.getElementById("cheeringsound");
+                cheersnd.play();
+            }
+            else {
+                let snd = document.getElementById("roostersound");
+                snd.play();
+            };
         });
-        
     };
 
     //Creates default page and computes current value of several assets and in total
@@ -466,9 +448,9 @@ export class Database {
     };
 
     //Loads databases via uploaded file
-    loadDB(file) {
-        const data = JSON.parse(file);
-        this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value, async() => {
+    async loadDB(file) {
+        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value, async() => {
+            const data = JSON.parse(file);
             await this.db.goods.clear();
             await this.db.buildings.clear();
             await this.db.time.clear();
@@ -479,7 +461,7 @@ export class Database {
             await Promise.all(Object.entries(data).map(([key, val]) => {
                 return this.db[key].bulkPut(val);
             }));
-        }).then(()=> this.update());
+        }).then(async ()=> await this.update());
         
     };
 
@@ -497,6 +479,8 @@ export class Database {
             storGoods = 0,
             storFood = 0;
         let goods = await this.getAllGoods();
+
+        //Coloring of income depending on production modifier
         const cap_aux = await this.db.capacity.get("Capacity");
         let col = "";
         if (cap_aux.prodmod < 100) {
@@ -620,6 +604,7 @@ export class Database {
                     };
                 });
                 btn.className = buildable ? "build buildable" : "build nonbuildable";
+                //Show missing resources when hovering
                 btn.addEventListener("mouseover", (el) => {
                     el.target.value="";
                     el.target.pattern="(\d|(\d,\d{0,2}))";
@@ -657,7 +642,7 @@ export class Database {
         };
     };
 
-    //Computes the yield per week writes them into the goods database
+    //Computes the yield per week writes them into the goods database including computation of food consumption and (de-)buffs on production modifier
     computeWeeklyYield() {
         return this.db.transaction("rw",this.db.population,this.db.goods,this.db.buildings,this.db.capacity,this.db.diplomacy, async()=>{
             let incomes = {},
@@ -666,9 +651,9 @@ export class Database {
             let goods = await this.getAllGoods();
             let cap_aux = await this.db.capacity.get("Capacity");
             const pops = await this.db.population.get("Population");
+            //One week has 8 days on Caeldaria
             let cons = 8*(pops.adult+0.5*pops.infant);
             let goods_aux = {...goods};
-            
             Object.keys(goods_aux).forEach(resource => {goods_aux[resource].income = 0});
             Object.keys(incomes).forEach(building => {Object.keys(incomes[building]).forEach((resource,i) => {
                 goods_aux[resource].income += Object.values(incomes[building])[i]*number[building];
@@ -688,7 +673,6 @@ export class Database {
                     luxmod_tot += goods_aux[key].luxmod;
                 };
             });
-
             //Managing food consumption with careful attention to the production modifier => define a variable which stores the consumption temporarily in order to compute correctly the production modifier on the incomes
             cons -= goods_aux["Spiritual Food"].income
             let income_consum_mod = {},
@@ -697,7 +681,7 @@ export class Database {
                 income_consum_mod[food[i]] = - cons*consmod[i]/consmod_tot;
             };
             Object.keys(goods_aux).forEach( key => {
-                if(goods_aux[key]!= 0 && goods_aux[key].total + goods_aux[key].income + income_consum_mod[key] < 0 && goods_aux[key].income + income_consum_mod[key]<0) {
+                if(goods_aux[key].total != 0 && goods_aux[key].total + goods_aux[key].income + income_consum_mod[key] < 0 && goods_aux[key].income + income_consum_mod[key]<0) {
                     lux_consum_mod[key] = Math.abs((goods_aux[key].total + goods_aux[key].income)/income_consum_mod[key]);
                     income_consum_mod[key] = - goods_aux[key].total;
                 };
@@ -707,7 +691,6 @@ export class Database {
             //Idea: Even if there are not enough luxury goods to supply all inhabitants (such that it is set to 0 in the lines above), there should still be a boost of economy for one week
             //          proportional to the fraction of consumption and production.
             let prodmod = 100;
-            let diplDB = await this.db.diplomacy.get("Diplomacy");
             cap_aux.negative_sources = "";
             cap_aux.positive_sources = "";
             if (cap_aux.prodmod_housings != undefined) {
@@ -730,32 +713,18 @@ export class Database {
                 };
             };
             cap_aux.prodmod = prodmod.toFixed(0);
-            
+            await this.computeFameModifier(cap_aux.prodmod);
             //Since the food for this week is already consumed, we dont recompute the food income based on the total, but on the left income AFTER the village has eaten
-            if (cap_aux.prodmod <= 50) {
-                diplDB.actualfame = diplDB.fame*cap_aux.prodmod/100;
-                diplDB.fameinfo = "The village disintegrates!"
-            }
-            else if (cap_aux.prodmod > 100) {
-                diplDB.actualfame = diplDB.fame*(1 + (cap_aux.prodmod-100)*10/100);
-                diplDB.fameinfo = "The village is prospering!";
-            }
-            else {
-                diplDB.fameinfo = "";
-                diplDB.actualfame = diplDB.fame;
-            };
             Object.keys(goods_aux).forEach(item => {
-                goods_aux[item].income *= cap_aux.prodmod / 100;
-                
+                goods_aux[item].income *= cap_aux.prodmod / 100;  
             });
+
             //Lancellins Food production isnt affected by this
             goods_aux["Spiritual Food"].income /= cap_aux.prodmod / 100;
-            
             Object.keys(income_consum_mod).forEach(item =>{
                 goods_aux[item].income += income_consum_mod[item]
             });
             
-            await this.db.diplomacy.put(diplDB);
             await this.db.capacity.put(cap_aux);
             goods = {...goods_aux};
             //Rounding all values of goods once per update call
@@ -769,17 +738,40 @@ export class Database {
         });
     };
 
+    //Updates the fame related things
+    async computeFameModifier(prodmod) {
+        return this.db.transaction("rw",this.db.diplomacy, async()=>{
+            let diplDB = await this.db.diplomacy.get("Diplomacy");
+            if (prodmod <= 50) {
+                diplDB.actualfame = diplDB.fame*prodmod/100;
+                diplDB.fameinfo = "The village disintegrates!"
+            }
+            else if (prodmod > 100) {
+                diplDB.actualfame = diplDB.fame*(1 + (prodmod-100)*10/100);
+                diplDB.fameinfo = "The village is prospering!";
+            }
+            else {
+                diplDB.fameinfo = "";
+                diplDB.actualfame = diplDB.fame;
+            };
+            await this.db.diplomacy.put(diplDB);
+        }).catch(err => {
+            console.error(err.stack);
+        });
+    };
+
     //Computes the constant yields and writes them into the stat overall databases
     computeConstantYield() {
         return this.db.transaction("rw",this.db.capacity,this.db.population,this.db.buildings, async()=>{
             let incomes = {},
                 number = {},
-                auxYield = {"food":0,"resources":0,"housings":0},
+                auxYield = {"housings":0,"resources":0,"food":0},
                 aux_stor = await this.db.capacity.get("Capacity"),
                 aux_pop = await this.db.population.get("Population");
+
             (await this.getAllBuildings()).forEach(building => {incomes[building.name] = building.yield_const, number[building.name]=building.number});
+            let names = this.getConstantYieldNames(incomes);
             Object.keys(incomes).forEach( building =>{
-                let names = ["StorFood","StorRes","Housings"];
                 let m = 0;
                 for (let key of Object.keys(auxYield)) {
                     if (incomes[building][names[m]] != undefined) {
@@ -791,14 +783,27 @@ export class Database {
             
             aux_stor.food = auxYield.food;
             aux_stor.resources = auxYield.resources;
-            await this.db.capacity.put(aux_stor);
             aux_pop.housings = auxYield.housings;
+            await this.db.capacity.put(aux_stor);
             await this.db.population.put(aux_pop);
         }).catch(err => {
             console.error(err.stack);
         });
     };
- 
+
+    //Get constant yields from existing buildings
+    getConstantYieldNames(incomes){
+        let names = [];
+        Object.values(incomes).forEach( item =>{
+            if (Object.keys(item) != 0) {
+                Object.keys(item).forEach(yie => {
+                    names.push(yie)
+                });
+            };
+        });
+        return names = [...new Set(names)];
+    };
+
     //Builds a certain building "number" times and removes the necessary goods from the database
     async buildBuilding (name, number){
         let snd = document.getElementById("buildingsound");
@@ -816,8 +821,8 @@ export class Database {
             await this.db.goods.bulkPut(Object.values(goods))
             building.number += number
             await this.db.buildings.put(building)
-        }).then( () => { 
-            this.update();
+        }).then( async () => { 
+            await this.update();
         }).catch(err => {
             console.error(err.stack)
         })
@@ -838,13 +843,21 @@ export class Database {
             let foodbol = false;
 
             if (aux ===undefined) {
-                if (addTot > cap.resources - cap.actres ) {
-                    addTot = 0;
-                    this.errorsnd.play();
-                };
                 if (foodmod != undefined) {
                     foodbol = true;
                 };
+                if (foodbol === true) {
+                    if (addTot > cap.food - cap.actfood ) {
+                        addTot = 0;
+                        this.errorsnd.play();
+                    };
+                }
+                else {
+                    if (addTot > cap.resources - cap.actres ) {
+                        addTot = 0;
+                        this.errorsnd.play();
+                    };
+                }
                 await this.db.goods.put({name: Name, income: addInc, total: addTot,valPU:valPU,unstorable:false,food:foodbol,consmod:foodmod,luxmod:luxmod});
             }
             else{
@@ -854,7 +867,7 @@ export class Database {
                     aux.total = 0;
                     this.errorsnd.play();
                 }
-                //Exclude GP as only good, which is stored outside the storage houses
+                //Exclude gold pieces as only good, which is stored outside the storage houses
                 else if (Name === "GP") {
                     aux.total += addTot;
                 }
@@ -897,5 +910,5 @@ export class Database {
     async getBuilding (Name) {
         let aux = await this.db.buildings.get(Name);
         return aux;
-        }
+    };
 }

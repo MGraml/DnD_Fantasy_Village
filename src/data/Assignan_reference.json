@@ -2,8 +2,8 @@
     "goods": [
         {
             "name": "Beef",
-            "income": 91.122,
-            "total": 700,
+            "income": 79.6,
+            "total": 901.122,
             "valPU": 0.3,
             "food": true,
             "unstorable": false,
@@ -12,8 +12,8 @@
         },
         {
             "name": "Bread",
-            "income": -69.756,
-            "total": 1250,
+            "income": -88,
+            "total": 1180.244,
             "valPU": 0.1,
             "food": true,
             "unstorable": false,
@@ -22,8 +22,8 @@
         },
         {
             "name": "Fish",
-            "income": 11.322,
-            "total": 300,
+            "income": 1.32,
+            "total": 311.322,
             "valPU": 0.2,
             "food": true,
             "unstorable": false,
@@ -32,8 +32,8 @@
         },
         {
             "name": "Furniture",
-            "income": 0,
-            "total": 0,
+            "income": 8.24,
+            "total": 8.4,
             "valPU": 6.5,
             "food": false,
             "unstorable": false,
@@ -42,8 +42,8 @@
         },
         {
             "name": "GP",
-            "income": 4.2,
-            "total": 2658,
+            "income": 4.12,
+            "total": 2187.2,
             "valPU": 1,
             "food": false,
             "unstorable": false,
@@ -72,8 +72,8 @@
         },
         {
             "name": "Grapes",
-            "income": -24.488,
-            "total": 40,
+            "income": -15.512,
+            "total": 15.512,
             "valPU": 2.5,
             "food": true,
             "unstorable": false,
@@ -102,8 +102,8 @@
         },
         {
             "name": "Silver",
-            "income": 2.688,
-            "total": 12,
+            "income": 1.648,
+            "total": 13.68,
             "valPU": 50,
             "food": false,
             "unstorable": false,
@@ -122,8 +122,8 @@
         },
         {
             "name": "Stone",
-            "income": 0,
-            "total": 25,
+            "income": 123.6,
+            "total": 51,
             "valPU": 3,
             "food": false,
             "unstorable": false,
@@ -142,8 +142,8 @@
         },
         {
             "name": "Wood",
-            "income": 0,
-            "total": 5475,
+            "income": -8.24,
+            "total": 5216.6,
             "valPU": 1.5,
             "food": false,
             "unstorable": false,
@@ -159,7 +159,7 @@
                 "Stone": 100,
                 "GP": 550
             },
-            "number": 0,
+            "number": 2,
             "yield_weekly": {
                 "Wood": -4,
                 "Furniture": 4
@@ -281,7 +281,7 @@
                 "Stone": 100,
                 "GP": 475
             },
-            "number": 19,
+            "number": 20,
             "yield_weekly": {},
             "yield_const": {
                 "Housings": 8
@@ -303,6 +303,34 @@
             "variable": false
         },
         {
+            "name": "Quarry - unskilled",
+            "cost": {},
+            "number": 15,
+            "yield_weekly": {
+                "Stone": "8"
+            },
+            "yield_const": {
+                "0": ""
+            },
+            "value": 0,
+            "buildable": false,
+            "variable": "true"
+        },
+        {
+            "name": "Quarry skilled",
+            "cost": {},
+            "number": 0,
+            "yield_weekly": {
+                "Stone": "24"
+            },
+            "yield_const": {
+                "0": ""
+            },
+            "value": 0,
+            "buildable": false,
+            "variable": "true"
+        },
+        {
             "name": "Silver Mine - skilled Workers",
             "cost": {},
             "number": 4,
@@ -317,7 +345,7 @@
         {
             "name": "Silver Mine - unskilled Workers",
             "cost": {},
-            "number": 15,
+            "number": 0,
             "yield_weekly": {
                 "Silver": 0.064
             },
@@ -348,16 +376,16 @@
         {
             "name": "Time",
             "year": 1132,
-            "week": 30
+            "week": 31
         }
     ],
     "population": [
         {
             "name": "Population",
-            "total": 167,
-            "adult": 144,
-            "infant": 23,
-            "housings": 168
+            "total": 170,
+            "adult": 146.25,
+            "infant": 23.75,
+            "housings": 176
         }
     ],
     "capacity": [
@@ -365,26 +393,28 @@
             "name": "Capacity",
             "resources": 15000,
             "food": 30000,
-            "prodmod": "105",
-            "actres": 6422,
-            "actfood": 2290
+            "prodmod": "103",
+            "actres": 6199.680000000001,
+            "actfood": 2408.2000000000003,
+            "negative_sources": "",
+            "positive_sources": "\nLuxury good - Grapes"
         }
     ],
     "diplomacy": [
         {
             "name": "Diplomacy",
-            "fame": 2,
-            "arcane": 1,
+            "fame": 4,
+            "arcane": 2,
             "fameinfo": "The village is prospering!",
-            "actualfame": 3
+            "actualfame": 5.2
         }
     ],
     "value": [
         {
             "name": "Value",
-            "total": 59648,
-            "resources": 17360.5,
-            "buildings": 42287.5
+            "total": 62150.6054,
+            "resources": 16713.1054,
+            "buildings": 45437.5
         }
     ]
 }

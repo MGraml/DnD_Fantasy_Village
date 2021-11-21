@@ -79,7 +79,7 @@ export class Database {
                                     number: this.infstr_num[j],yield_weekly:this.yield_weekly[j],yield_const:this.yield_const[j],
                                     value: valueBuilding,buildable:this.buildable[j],variable:this.variable[j]})
         }
-        await this.db.time.put({name:"Time",year: 1132, week:30});
+        await this.db.time.put({name:"Time",year: 1132, week:30,month: "Civius", date: 28});
         await this.db.population.put({name:"Population",total:167,adult:144,infant:23,housings:0});
         await this.db.capacity.put({name:"Capacity",resources:0,food:0,prodmod:100});
         
@@ -285,9 +285,17 @@ export class Database {
     //Takes care of correct year/month
     async timeManager() {
         let time = await this.db.time.get("Time");
-        if (time.week === 41) {time.year +=1; time.week = 1} else {time.week += 1}
+        if (time.week === 41) {time.year +=1; time.week = 1} else {time.week += 1};
+        let months = {"Thex": 42, "Cesyn": 40, "Lugh": 41, "Athos": 45, "Hania": 37, "Civius": 41, "Mannanán": 40, "Nemnir": 42},
+            days = time.week * 8,
+            j = 0;
+        while (days > 45){
+            days -= Object.values(months)[j]
+            j += 1
+        };
+        time.month = Object.keys(months)[j]
+        time.date = days-7
         await this.db.time.put(time)
-        return time
     };
 
     //Adds the necessary calculations to the weekPassed function
@@ -362,8 +370,8 @@ export class Database {
     async weekPassed() {
         await this.update();
         await this.weekPassedComputations();
-        await this.timeManager();
-        
+        let time = await this.timeManager();
+        console.log(time)
         //Restrict sounds to the production modifier of the incoming week, not the passed one.
         this.update().then(async ()=>{
             let cap_aux = await this.db.capacity.get("Capacity");
@@ -386,11 +394,13 @@ export class Database {
 
     //Creates default page and computes current value of several assets and in total
     async createStatTot() {
+        let time_aux = await this.db.time.get("Time");
         let container = document.getElementById("stat-tot");
         container.innerHTML="";
         let cell1 = document.createElement("div"),
                 head = document.createElement("h1");
-        head.innerHTML = "Assignan"
+        head.style = "white-space: pre"
+        head.innerHTML = "Assignan\n\n"+time_aux.month+" Day "+time_aux.date
         head.align = "center"
         let img = document.createElement("img");
         img.src = "./src/images/Wappen_Assignan.PNG"

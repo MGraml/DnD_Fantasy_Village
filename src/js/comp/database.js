@@ -853,7 +853,7 @@ export class Database {
             let foodbol = false;
 
             if (aux ===undefined) {
-                if (foodmod != undefined) {
+                if (foodmod != 0) {
                     foodbol = true;
                 };
                 if (foodbol === true) {

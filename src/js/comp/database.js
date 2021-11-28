@@ -53,10 +53,11 @@ export class Database {
         this.unstorable = [false,false,false,false,false,false,false,false,false,false,false,false,false,true,false];
         this.consmod = [0,0,0,0,0,0,0.1,0,0,2,0,1,1,0,0];
         this.luxmod = [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0];
+        this.deficit = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
         
         for (let i=0;i<this.assets.length;i++) {
             this.db.goods.put({name:this.assets[i],income:0,total:this.asset_num[i],valPU:this.asset_VPU[i],food:this.asset_food[i],
-                unstorable:this.unstorable[i],consmod:this.consmod[i],luxmod:this.luxmod[i]});
+                unstorable:this.unstorable[i],consmod:this.consmod[i],luxmod:this.luxmod[i],deficit:this.deficit[i]});
         }
         let goods = await this.getAllGoods();
 
@@ -153,8 +154,8 @@ export class Database {
         
         await btnBuild.addEventListener("click", async () => {
             this.db.transaction("rw",this.db.buildings, async () => {
-                    this.db.buildings.put({name: inputsBuilds[0].value,cost:{}, number: 1,yield_weekly: {[selectsBuilds[1].value]: inputsBuilds[2].value},
-                        yield_const: {[selectsBuilds[0].value]: inputsBuilds[1].value}, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
+                    this.db.buildings.put({name: inputsBuilds[0].value,cost:{}, number: 1,yield_weekly: {[selectsBuilds[1].value]: Number(inputsBuilds[2].value)},
+                        yield_const: {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)}, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
                             async () => {await this.update(); await this.createStatBuild();}
                         );  
         })
@@ -371,7 +372,6 @@ export class Database {
         await this.update();
         await this.weekPassedComputations();
         let time = await this.timeManager();
-        console.log(time)
         //Restrict sounds to the production modifier of the incoming week, not the passed one.
         this.update().then(async ()=>{
             let cap_aux = await this.db.capacity.get("Capacity");
@@ -492,17 +492,24 @@ export class Database {
 
         //Coloring of income depending on production modifier
         const cap_aux = await this.db.capacity.get("Capacity");
-        let col = "";
-        if (cap_aux.prodmod < 100) {
-            col = "red";
-        }
-        else if (cap_aux.prodmod > 100) {
-            col = "green";
-        }
+        
         for (let good of Object.values(goods)) {
             valueGoods+=good.total*good.valPU;
             storGoods += good.total
-            this.createCells(container,[good.name,good.total.toFixed(2),good.income.toFixed(2),good.valPU,(good.total*good.valPU).toFixed(2)],col);
+            let col = "", problems = undefined;
+            if (cap_aux.prodmod < 100) {
+                col = "red";
+            }
+            else if (cap_aux.prodmod > 100) {
+                col = "green";
+            };
+            if (good.deficit != undefined) {
+                if (good.deficit[0] != undefined) {
+                col = "#ff8888";
+                problems = good.deficit;
+                };
+            };
+            this.createCells(container,[good.name,good.total.toFixed(2),good.income.toFixed(2),good.valPU,(good.total*good.valPU).toFixed(2)],col,undefined,problems);
         };
 
         Object.keys(goods).forEach(key => {
@@ -511,7 +518,11 @@ export class Database {
             };
         });
         storGoods -= storFood;
-        storGoods -= goods["GP"].total;
+        Object.keys(goods).forEach(key => {
+            if (key.includes("GP")){
+                storGoods -= goods[key].total;
+            }
+        })
         let aux_val = await this.db.value.get("Value");
         aux_val.resources = valueGoods;
         await this.db.value.put(aux_val)
@@ -522,7 +533,7 @@ export class Database {
     };
 
     //Extract the cell creation in the tables
-    createCells(cont,list, color,align) {
+    createCells(cont,list, color,align,problems) {
         for (let i =0; i<list.length;i++) {
             let cell = document.createElement("div");
             cell.className = "cell";
@@ -531,6 +542,14 @@ export class Database {
             if (color != undefined && i === 2) {
                 cell.style.color = color;
             };
+            if (problems != undefined) {
+                console.log(problems);
+                cell.addEventListener("mouseover", async (el) => {
+                el.target.value="";
+                let titlestr = "Problems in supply chain with\n"
+                problems.forEach(prob => {titlestr += "- "+prob + "\n"})
+                el.target.title=titlestr
+                })};
             cont.appendChild(cell);
         };
     };
@@ -670,7 +689,43 @@ export class Database {
                 if (goods_aux[resource].total < 0 ) {
                     goods_aux[resource].total = 0
                 };
+                goods_aux[resource].deficit = [];
             })});
+            // Check for consumption of goods by buildings
+            let incs = {};
+            console.log(incomes)
+            Object.keys(incomes).forEach(k_inc =>{
+                Object.keys(incomes[k_inc]).forEach( k => {
+                    if (incomes[k_inc][k] < 0) {
+                        if (incs[k] === undefined) {
+                            incs[k] = [k_inc]
+                        }
+                        else {
+                            incs[k].push(k_inc)
+                        };
+                    };
+                })
+            });
+            console.log(incs)
+            console.log(goods_aux)
+            Object.values(goods_aux).forEach(good => {
+                if (good.total + good.income < 0) {
+                    incs[good.name].forEach(building => {
+                        //console.log("Building",building)
+                        Object.keys(incomes[building]).forEach(res => {
+                            //console.log("Res",res)
+                            if (res != good.name) {
+                                //console.log(good.name, good.income)
+                                //console.log(res,incomes[building][res]*number[building])
+                                //console.log((incomes[building][good.name]*number[building]))
+                                goods_aux[res].income -= incomes[building][res]*number[building] * (1+(good.total)/goods_aux[good.name].income);
+                                (goods_aux[res].deficit).push(good.name)
+                            }
+                        })
+                    });
+                    
+                }
+            })
             let food = [], 
                 consmod = [],
                 consmod_tot = 0,
@@ -878,7 +933,7 @@ export class Database {
                     this.errorsnd.play();
                 }
                 //Exclude gold pieces as only good, which is stored outside the storage houses
-                else if (Name === "GP") {
+                else if (Name.includes("GP")) {
                     aux.total += addTot;
                 }
                 else if (addTot > cap.resources - cap.actres && !aux.food) {

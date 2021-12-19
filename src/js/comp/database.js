@@ -8,7 +8,8 @@ export class Database {
               population: 'name,total,adult,infant,housings',
               capacity: 'name,resources,food,prodmod,actres,actfood,prodmod_housings,positive_sources,negative_sources',
               diplomacy: 'name,fame,arcane,fameinfo,actualfame',
-              value: 'name,total,resources,buildings'
+              value: 'name,total,resources,buildings',
+              webhook: 'name,hook'
           });
         //Loads Errorsound
         this.errorsnd = document.getElementById("errorsound");
@@ -16,7 +17,8 @@ export class Database {
         //Takes care of the possibility to load databases in case of missing data
         
         let btn_save = document.querySelector("button#save"),
-            inp_load = document.querySelector("input#load");
+            inp_load = document.querySelector("input#load"),
+            btn_send = document.querySelector("button#send");
 
             btn_save.addEventListener("click", () =>{
                 this.saveDB();
@@ -26,7 +28,9 @@ export class Database {
                 reader.addEventListener("load", (ev) => this.loadDB(ev.target.result));
                 reader.readAsText(e.target.files[0]);
             });
-            
+            btn_send.addEventListener("click", () =>{
+                this.sendDB();
+            });
         //If there is no other possibility, one can recreate the village by uncommenting this command:
         
         //this.initDatabase();
@@ -158,8 +162,7 @@ export class Database {
                         yield_const: {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)}, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
                             async () => {await this.update(); await this.createStatBuild();}
                         );  
-        })
-        
+        });
     };
 
     //Create menu for adding items in settings screen
@@ -459,7 +462,7 @@ export class Database {
 
     //Loads databases via uploaded file
     async loadDB(file) {
-        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value, async() => {
+        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value,this.db.webhook, async() => {
             const data = JSON.parse(file);
             await this.db.goods.clear();
             await this.db.buildings.clear();
@@ -468,11 +471,87 @@ export class Database {
             await this.db.capacity.clear();
             await this.db.diplomacy.clear();
             await this.db.value.clear();
+            await this.db.webhook.clear();
             await Promise.all(Object.entries(data).map(([key, val]) => {
                 return this.db[key].bulkPut(val);
             }));
         }).then(async ()=> await this.update());
         
+    };
+
+    //Sends databases to Discord
+    async sendDB() {
+        
+        let file = new Blob( [JSON.stringify({
+            goods:      await this.db.goods.toArray(),
+            buildings:  await this.db.buildings.toArray(),
+            time:       await this.db.time.toArray(),
+            population: await this.db.population.toArray(),
+            capacity:   await this.db.capacity.toArray(),
+            diplomacy:  await this.db.diplomacy.toArray(),
+            value:      await this.db.value.toArray(),
+            webhook:    await this.db.webhook.toArray()
+        },null,4)],{type: "application/json"});
+
+        let namestr = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
+        let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
+        if (comment === null){
+            return
+        }
+        const xhr = new XMLHttpRequest();
+        const params = {
+            username: "Ereldra Naerth",
+            avatar_url: "https://cdn.discordapp.com/attachments/703997704392409139/864280074201858118/Lady_Ereldra_Naerth.jpg",
+            content: "Report on Assignan's current status:",
+            attachments: [{
+                "id": 0,
+                "description": "Report",
+            }],
+            embeds: [{
+                "title": "Comments:",
+                "color": 16776960,
+                "description": "*None*"
+            }]
+        };
+        console.log(comment)
+        if (comment){
+            params.embeds = [{
+                "title": "Comments:",
+                "color": 16776960,
+                "description": comment
+            }]
+        };
+        let hook = await this.db.webhook.get("Webhook")
+        xhr.open("POST", hook.hook,true);
+        var boundary = '---------------------------';
+        boundary += Math.floor(Math.random()*32768);
+        boundary += Math.floor(Math.random()*32768);
+        boundary += Math.floor(Math.random()*32768);
+        xhr.setRequestHeader("Content-Type", 'multipart/form-data; boundary=' + boundary);
+        var body = '';
+        body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
+        body += "payload_json";
+        //body += "\r\nContent-Type: application/json"
+        body += '"\r\n\r\n';
+        body += JSON.stringify(params);
+        body += '\r\n'
+        body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
+        body += 'files[0]"; filename='+ namestr +"\r\nContent-Type: text/plain"+ '\r\n\r\n'
+        body += JSON.stringify({
+            goods:      await this.db.goods.toArray(),
+            buildings:  await this.db.buildings.toArray(),
+            time:       await this.db.time.toArray(),
+            population: await this.db.population.toArray(),
+            capacity:   await this.db.capacity.toArray(),
+            diplomacy:  await this.db.diplomacy.toArray(),
+            value:      await this.db.value.toArray(),
+            webhook:    await this.db.webhook.toArray()
+        },null,4);
+        body += '\r\n'
+        body += '--' + boundary + '--';
+        xhr.onload = function() {
+        }
+        xhr.send(body);
     };
 
     //Creates Statistic page for goods and computes total value of goods for default page

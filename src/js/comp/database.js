@@ -522,8 +522,8 @@ export class Database {
             }]
         };
         let hook = await this.db.webhook.get("Webhook");
-        if (hook = "---") {
-            hook = prompt("There is no webhook adress in the database, probably you want to give one:")
+        if (hook.hook === "---") {
+            hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:")
         };
         await this.db.webhook.put(hook);
         xhr.open("POST", hook.hook,true);

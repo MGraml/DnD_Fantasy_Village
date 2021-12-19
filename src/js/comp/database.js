@@ -90,6 +90,7 @@ export class Database {
         
         await this.db.diplomacy.put({name:"Diplomacy",fame: 2,arcane:1,fameinfo:"",actualfame: 2});
         await this.db.value.put({name:"Value",total: 0,resources:0,buildings:0});
+        await this.db.webhook.put({name:"Webhook",hook:"---"});
     };
 
     //Is called when important things happen and an update is necessary
@@ -513,7 +514,6 @@ export class Database {
                 "description": "*None*"
             }]
         };
-        console.log(comment)
         if (comment){
             params.embeds = [{
                 "title": "Comments:",
@@ -521,7 +521,11 @@ export class Database {
                 "description": comment
             }]
         };
-        let hook = await this.db.webhook.get("Webhook")
+        let hook = await this.db.webhook.get("Webhook");
+        if (hook = "---") {
+            hook = prompt("There is no webhook adress in the database, probably you want to give one:")
+        };
+        await this.db.webhook.put(hook);
         xhr.open("POST", hook.hook,true);
         var boundary = '---------------------------';
         boundary += Math.floor(Math.random()*32768);

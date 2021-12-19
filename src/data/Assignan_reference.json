@@ -2,51 +2,66 @@
     "goods": [
         {
             "name": "Beef",
-            "income": 79.6,
-            "total": 901.122,
+            "income": 53.65,
+            "total": 851.128,
             "valPU": 0.3,
             "food": true,
             "unstorable": false,
             "consmod": 1,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Bread",
-            "income": -88,
-            "total": 1180.244,
+            "income": -132.7,
+            "total": 1793.056,
             "valPU": 0.1,
             "food": true,
             "unstorable": false,
             "consmod": 2,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Fish",
-            "income": 1.32,
-            "total": 311.322,
+            "income": 25.65,
+            "total": 55.048,
             "valPU": 0.2,
             "food": true,
             "unstorable": false,
             "consmod": 1,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Furniture",
-            "income": 8.24,
-            "total": 8.4,
+            "income": 8,
+            "total": 24.64,
             "valPU": 6.5,
             "food": false,
             "unstorable": false,
             "consmod": 0,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "GP",
-            "income": 4.12,
-            "total": 2187.2,
+            "income": 4,
+            "total": 8355.32,
             "valPU": 1,
             "food": false,
             "unstorable": false,
+            "consmod": 0,
+            "luxmod": 0,
+            "deficit": []
+        },
+        {
+            "name": "GP (Cathedral only)",
+            "income": 0,
+            "total": 20000,
+            "valPU": 1,
+            "unstorable": false,
+            "food": false,
             "consmod": 0,
             "luxmod": 0
         },
@@ -72,8 +87,8 @@
         },
         {
             "name": "Grapes",
-            "income": -15.512,
-            "total": 15.512,
+            "income": 0,
+            "total": 0,
             "valPU": 2.5,
             "food": true,
             "unstorable": false,
@@ -102,13 +117,14 @@
         },
         {
             "name": "Silver",
-            "income": 1.648,
-            "total": 13.68,
+            "income": 1.6,
+            "total": 16.928,
             "valPU": 50,
             "food": false,
             "unstorable": false,
             "consmod": 0,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Spiritual Food",
@@ -118,17 +134,19 @@
             "food": false,
             "unstorable": true,
             "consmod": 0,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Stone",
-            "income": 123.6,
-            "total": 51,
+            "income": 160,
+            "total": 164.6,
             "valPU": 3,
             "food": false,
             "unstorable": false,
             "consmod": 0,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Wheat",
@@ -138,17 +156,19 @@
             "food": false,
             "unstorable": false,
             "consmod": 0,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         },
         {
             "name": "Wood",
-            "income": -8.24,
-            "total": 5216.6,
+            "income": -8,
+            "total": 4460.36,
             "valPU": 1.5,
             "food": false,
             "unstorable": false,
             "consmod": 0,
-            "luxmod": 0
+            "luxmod": 0,
+            "deficit": []
         }
     ],
     "buildings": [
@@ -168,6 +188,18 @@
             "value": 1075,
             "buildable": true,
             "variable": false
+        },
+        {
+            "name": "Cathedral",
+            "cost": {
+                "GP": 5000
+            },
+            "number": 0,
+            "yield_weekly": {},
+            "yield_const": {},
+            "value": 5000,
+            "buildable": false,
+            "variable": true
         },
         {
             "name": "Chapel - Lancellin",
@@ -235,7 +267,7 @@
                 "Stone": 20,
                 "GP": 140
             },
-            "number": 3,
+            "number": 4,
             "yield_weekly": {
                 "Fish": 48
             },
@@ -281,7 +313,7 @@
                 "Stone": 100,
                 "GP": 475
             },
-            "number": 20,
+            "number": 21,
             "yield_weekly": {},
             "yield_const": {
                 "Housings": 8
@@ -303,9 +335,23 @@
             "variable": false
         },
         {
+            "name": "Prison",
+            "cost": {
+                "Wood": 40,
+                "Stone": 250,
+                "GP": 675
+            },
+            "number": 1,
+            "yield_weekly": {},
+            "yield_const": {},
+            "value": 1500,
+            "buildable": true,
+            "variable": false
+        },
+        {
             "name": "Quarry - unskilled",
             "cost": {},
-            "number": 15,
+            "number": 20,
             "yield_weekly": {
                 "Stone": "8"
             },
@@ -376,16 +422,18 @@
         {
             "name": "Time",
             "year": 1132,
-            "week": 31
+            "week": 33,
+            "month": "Manannán",
+            "date": 11
         }
     ],
     "population": [
         {
             "name": "Population",
-            "total": 170,
-            "adult": 146.25,
-            "infant": 23.75,
-            "housings": 176
+            "total": 176.20000000000002,
+            "adult": 150.15,
+            "infant": 26.05,
+            "housings": 184
         }
     ],
     "capacity": [
@@ -393,28 +441,34 @@
             "name": "Capacity",
             "resources": 15000,
             "food": 30000,
-            "prodmod": "103",
-            "actres": 6199.680000000001,
-            "actfood": 2408.2000000000003,
+            "prodmod": "100",
+            "actres": 5576.527999999998,
+            "actfood": 2699.232,
             "negative_sources": "",
-            "positive_sources": "\nLuxury good - Grapes"
+            "positive_sources": ""
         }
     ],
     "diplomacy": [
         {
             "name": "Diplomacy",
             "fame": 4,
-            "arcane": 2,
-            "fameinfo": "The village is prospering!",
-            "actualfame": 5.2
+            "arcane": 4,
+            "fameinfo": "",
+            "actualfame": 4
         }
     ],
     "value": [
         {
             "name": "Value",
-            "total": 62150.6054,
-            "resources": 16713.1054,
-            "buildings": 45437.5
+            "total": 90524.3736,
+            "resources": 42311.873600000006,
+            "buildings": 48212.5
+        }
+    ],
+    "webhook": [
+        {
+            "name": "Webhook",
+            "hook":"---"
         }
     ]
 }

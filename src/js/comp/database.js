@@ -501,8 +501,7 @@ export class Database {
         }
         const xhr = new XMLHttpRequest();
         const params = {
-            username: "Ereldra Naerth",
-            avatar_url: "https://cdn.discordapp.com/attachments/703997704392409139/864280074201858118/Lady_Ereldra_Naerth.jpg",
+            username: "Lady Ereldra Naerth",
             content: "Report on Assignan's current status:",
             attachments: [{
                 "id": 0,

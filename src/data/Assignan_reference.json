@@ -2,8 +2,8 @@
     "goods": [
         {
             "name": "Beef",
-            "income": 53.65,
-            "total": 851.128,
+            "income": 13.65,
+            "total": 9101.128,
             "valPU": 0.3,
             "food": true,
             "unstorable": false,
@@ -13,8 +13,8 @@
         },
         {
             "name": "Bread",
-            "income": -132.7,
-            "total": 1793.056,
+            "income": -332.7,
+            "total": 18293.056,
             "valPU": 0.1,
             "food": true,
             "unstorable": false,
@@ -24,8 +24,8 @@
         },
         {
             "name": "Fish",
-            "income": 25.65,
-            "total": 55.048,
+            "income": -174.35,
+            "total": 8305.048,
             "valPU": 0.2,
             "food": true,
             "unstorable": false,
@@ -46,8 +46,8 @@
         },
         {
             "name": "GP",
-            "income": 4,
-            "total": 8355.32,
+            "income": 6,
+            "total": 3330.32,
             "valPU": 1,
             "food": false,
             "unstorable": false,
@@ -117,7 +117,7 @@
         },
         {
             "name": "Silver",
-            "income": 1.6,
+            "income": 10.56,
             "total": 16.928,
             "valPU": 50,
             "food": false,
@@ -139,8 +139,8 @@
         },
         {
             "name": "Stone",
-            "income": 160,
-            "total": 164.6,
+            "income": 40,
+            "total": 9389.6,
             "valPU": 3,
             "food": false,
             "unstorable": false,
@@ -162,7 +162,7 @@
         {
             "name": "Wood",
             "income": -8,
-            "total": 4460.36,
+            "total": 2910.36,
             "valPU": 1.5,
             "food": false,
             "unstorable": false,
@@ -234,7 +234,7 @@
                 "Stone": 200,
                 "GP": 1900
             },
-            "number": 4,
+            "number": 6,
             "yield_weekly": {
                 "Beef": 80,
                 "Wheat": 100
@@ -295,7 +295,7 @@
                 "Stone": 75,
                 "GP": 300
             },
-            "number": 2,
+            "number": 3,
             "yield_weekly": {
                 "Wheat": -200,
                 "Bread": 200,
@@ -313,7 +313,7 @@
                 "Stone": 100,
                 "GP": 475
             },
-            "number": 21,
+            "number": 34,
             "yield_weekly": {},
             "yield_const": {
                 "Housings": 8
@@ -351,7 +351,7 @@
         {
             "name": "Quarry - unskilled",
             "cost": {},
-            "number": 20,
+            "number": 5,
             "yield_weekly": {
                 "Stone": "8"
             },
@@ -379,7 +379,7 @@
         {
             "name": "Silver Mine - skilled Workers",
             "cost": {},
-            "number": 4,
+            "number": 24,
             "yield_weekly": {
                 "Silver": 0.4
             },
@@ -391,7 +391,7 @@
         {
             "name": "Silver Mine - unskilled Workers",
             "cost": {},
-            "number": 0,
+            "number": 15,
             "yield_weekly": {
                 "Silver": 0.064
             },
@@ -407,7 +407,7 @@
                 "Stone": 300,
                 "GP": 925
             },
-            "number": 1,
+            "number": 2,
             "yield_weekly": {},
             "yield_const": {
                 "StorRes": 15000,
@@ -430,20 +430,20 @@
     "population": [
         {
             "name": "Population",
-            "total": 176.20000000000002,
-            "adult": 150.15,
+            "total": 276.20000000000005,
+            "adult": 250.15,
             "infant": 26.05,
-            "housings": 184
+            "housings": 296
         }
     ],
     "capacity": [
         {
             "name": "Capacity",
-            "resources": 15000,
-            "food": 30000,
+            "resources": 30000,
+            "food": 60000,
             "prodmod": "100",
-            "actres": 5576.527999999998,
-            "actfood": 2699.232,
+            "actres": 13251.527999999998,
+            "actfood": 35699.232,
             "negative_sources": "",
             "positive_sources": ""
         }
@@ -451,24 +451,34 @@
     "diplomacy": [
         {
             "name": "Diplomacy",
-            "fame": 4,
+            "fame": 8,
             "arcane": 4,
             "fameinfo": "",
-            "actualfame": 4
+            "actualfame": 8
         }
     ],
     "value": [
         {
             "name": "Value",
-            "total": 90524.3736,
-            "resources": 42311.873600000006,
-            "buildings": 48212.5
+            "total": 139299.3736,
+            "resources": 68411.8736,
+            "buildings": 70887.5
         }
     ],
     "webhook": [
         {
             "name": "Webhook",
-            "hook":"---"
+            "hook": "---"
+        }
+    ],
+    "adresses": [
+        {
+            "name": "King in the Deep Arangheim",
+            "avatar": ""
+        },
+        {
+            "name": "Lady Ereldra Naerth",
+            "avatar": ""
         }
     ]
 }

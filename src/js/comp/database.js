@@ -46,6 +46,7 @@ export class Database {
 
         //Initializes the Settings button (which wont run without data!)
         this.initSettings();
+        this.protocol_list = [];
     };
 
     //Initializes the Database with certain values - shouldnt be used anymore, since data is loaded via external json
@@ -128,6 +129,7 @@ export class Database {
                             "\n\nDebuffs:"+ (capDB.negative_sources==="" ? "\n---" : capDB.negative_sources);
             el.target.title=titlestr
         });
+        this.createProtocol();
     };
 
     //Initializing Settings page
@@ -147,6 +149,14 @@ export class Database {
                      inpValTot *= -1;
                 };
                 await this.addGood(inputsItems[0].value,0,inpValTot*1,inputsItems[2].value*1,inputsItems[3].value*1,inputsItems[4].value*1);
+                if (inpValTot*1 > 0) {
+                    this.protocol_list.push(inputsItems[0].value+" were added to the storehouses.")
+                }
+                else {
+                    this.protocol_list.push(inputsItems[0].value+" were removed from the storehouses.")
+                };
+                
+                this.update();
             };
         });
 
@@ -161,8 +171,12 @@ export class Database {
             this.db.transaction("rw",this.db.buildings, async () => {
                     this.db.buildings.put({name: inputsBuilds[0].value,cost:{}, number: 1,yield_weekly: {[selectsBuilds[1].value]: Number(inputsBuilds[2].value)},
                         yield_const: {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)}, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
-                            async () => {await this.update(); await this.createStatBuild();}
-                        );  
+                            async () => {
+                                this.protocol_list.push("The new building "+inputsBuilds[0].value+" was added to the village.")
+                                await this.update(); 
+                                await this.createStatBuild();
+                                }
+                            );  
         });
     };
 
@@ -301,6 +315,7 @@ export class Database {
         time.month = Object.keys(months)[j]
         time.date = days-7
         await this.db.time.put(time)
+        return time.week -1
     };
 
     //Adds the necessary calculations to the weekPassed function
@@ -375,7 +390,7 @@ export class Database {
     async weekPassed() {
         await this.update();
         await this.weekPassedComputations();
-        let time = await this.timeManager();
+        let week = await this.timeManager();
         //Restrict sounds to the production modifier of the incoming week, not the passed one.
         this.update().then(async ()=>{
             let cap_aux = await this.db.capacity.get("Capacity");
@@ -394,6 +409,8 @@ export class Database {
                 snd.play();
             };
         });
+        let protocol_message = "Week "+week+" passed.";
+        this.protocol_list.push(protocol_message);
     };
 
     //Creates default page and computes current value of several assets and in total
@@ -556,6 +573,14 @@ export class Database {
         }
         xhr.send(body);
     };
+    createProtocol () {
+        for (let entry of this.protocol_list){
+            let list_entry = document.createElement("li");
+            list_entry.innerText = entry;
+            document.getElementById("protocol_list").append(list_entry);
+        };
+        this.protocol_list = [];
+    };
 
     //Creates Statistic page for goods and computes total value of goods for default page
     async createStatGoods() {
@@ -681,8 +706,10 @@ export class Database {
                     slct.appendChild(opt);
                 };
                 slct.addEventListener("change", async (e)=> {
+                    const prev_number = aux.number;
                     aux.number = slct.value*1;
                     await this.db.buildings.put(aux);
+                    this.protocol_list.push("The number of assets in "+aux.name+" was changed from "+prev_number+" to "+aux.number+".")
                     await this.update();
                 });
                 container.appendChild(slct);
@@ -968,6 +995,7 @@ export class Database {
             await this.db.goods.bulkPut(Object.values(goods))
             building.number += number
             await this.db.buildings.put(building)
+            this.protocol_list.push("A " + building.name + " was built.")
         }).then( async () => { 
             await this.update();
         }).catch(err => {

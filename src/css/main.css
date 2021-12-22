@@ -66,10 +66,14 @@ table {
 
 #dragdiv {
   position: absolute;
+  top: 40px;
+  left: 80px;
   z-index: 9;
   background: linear-gradient(to right, var(--bright-blue) -7%, var(--blue) 15%, var(--blue) 35%,var(--bright-blue) 60%,var(--blue) 75%, var(--dark-blue) 95%); 
   border: 1px solid #d3d3d3;
   text-align: left;
+  overflow-x: scroll;
+  max-width: 15%;
 }
 
 #dragdivheader {
@@ -78,4 +82,5 @@ table {
   z-index: 10;
   background: linear-gradient(to left, var(--bright-blue) -7%,var(--blue) 25%, var(--dark-blue) 95%);
   color: rgb(255, 217, 0);
+  width: 100%;
 }

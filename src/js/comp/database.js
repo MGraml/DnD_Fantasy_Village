@@ -508,7 +508,7 @@ export class Database {
         const xhr = new XMLHttpRequest();
         const params = {
             username: "Lady Ereldra Naerth",
-            content: "Report on Assignan's status in week: " + time.week + " in year " + time.year + " p.F.",
+            content: "Report on Assignan's status in week " + time.week + " of year " + time.year + " p.F.",
             attachments: [{
                 "id": 0,
                 "description": "Report",

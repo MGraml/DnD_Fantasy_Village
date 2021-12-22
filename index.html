@@ -14,11 +14,30 @@
         <audio id="riotingsound" src="src/data/Rioting.mp3"></audio>
     </head>
     <body>
-        <div id="dragdiv">
+        <div id="dragdiv" class="dragdiv">
             <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
-            <div id="dragdivheader">Log of passed actions</div>
+            <div id="dragdivheader" class="dragdivheader">Log of passed actions</div>
             <ol id="protocol_list">
             </ol>
+        </div>
+        <div id="message_dragdiv" class="dragdiv">
+            <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
+            <div id="message_dragdivheader" class="dragdivheader">Messenger</div>
+            <h1>Message tool</h1>
+            <button id="phonebook">☎📖</button>
+            <h2>Write your message:</h2>
+            From: <select id="senders"></select>
+            <p>To: Aina, Cloud, Grogg and Warryn</p>
+            <input type="text" id="message_text" placeholder="Type your message here.">
+            <p></p>
+            <button id="msgSend_button">Send</button>
+        </div>
+        <div id="contacts" class="dragdiv">
+            <div id="contactsheader" class="dragdivheader">Contacts</div>
+            <div id="contactlist"> </div>
+            <input type="text" id="contact_name" placeholder="Name of the contact." style="width: 62%;">
+            <input type="text" id="contact_ava" placeholder="URL to an avatar of the contact." style="width: 62%;">
+            <button id="addcontact_button">Add contact</button>
         </div>
         <div class="centered gameBox">
             <div class="logo">Assignan - Economic Aspects</div>
@@ -51,6 +70,8 @@
                 <button id="send" class="reset">Send</button>
             </div>
             <div id="prodmod">  &#9881; </div>
+            <button id="protocol_button" class="reset">Protocol</button>
+            <button id="message" class="reset">Messenger</button>
             <div id="reset" class="control reset">Settings</div>
             <div id="primary" class="control big-button A">Week passed</div>
             <div id="secondary" class="control big-button B">Manual</div>
@@ -61,6 +82,7 @@
             <div id="Mute">
                 <input type="button" class="reset" id="mutebtn" value="🕨"></input>
             </div>
+            
             <!-- Here is the book -->
             <div class="accent" id="book"></div>
         </div>

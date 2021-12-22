@@ -9,7 +9,8 @@ export class Database {
               capacity: 'name,resources,food,prodmod,actres,actfood,prodmod_housings,positive_sources,negative_sources',
               diplomacy: 'name,fame,arcane,fameinfo,actualfame',
               value: 'name,total,resources,buildings',
-              webhook: 'name,hook'
+              webhook: 'name,hook',
+              adresses: 'name,avatar',
           });
         //Loads Errorsound
         this.errorsnd = document.getElementById("errorsound");
@@ -19,6 +20,7 @@ export class Database {
         let btn_save = document.querySelector("button#save"),
             inp_load = document.querySelector("input#load"),
             btn_send = document.querySelector("button#send");
+            
 
             btn_save.addEventListener("click", () =>{
                 this.saveDB();
@@ -31,6 +33,13 @@ export class Database {
             btn_send.addEventListener("click", () =>{
                 this.sendDB();
             });
+
+        //Introduce send button for messages
+        let msg_button = document.getElementById("msgSend_button");
+        msg_button.addEventListener("click", async () => await this.sendMsg());
+        //Contact adding
+        document.getElementById("addcontact_button").addEventListener("click", async () => {await this.addContact(); await this.fillContacts();});
+
         //If there is no other possibility, one can recreate the village by uncommenting this command:
         
         //this.initDatabase();
@@ -92,6 +101,7 @@ export class Database {
         await this.db.diplomacy.put({name:"Diplomacy",fame: 2,arcane:1,fameinfo:"",actualfame: 2});
         await this.db.value.put({name:"Value",total: 0,resources:0,buildings:0});
         await this.db.webhook.put({name:"Webhook",hook:"---"});
+        await this.db.adresses.put({name:"Lady Ereldra Naerth",avatar:"---"});
     };
 
     //Is called when important things happen and an update is necessary
@@ -130,6 +140,7 @@ export class Database {
             el.target.title=titlestr
         });
         this.createProtocol();
+        await this.fillContacts();
     };
 
     //Initializing Settings page
@@ -465,7 +476,9 @@ export class Database {
             population: await this.db.population.toArray(),
             capacity:   await this.db.capacity.toArray(),
             diplomacy:  await this.db.diplomacy.toArray(),
-            value:      await this.db.value.toArray()
+            value:      await this.db.value.toArray(),
+            webhook:    await this.db.webhook.toArray(),
+            adresses:   await this.db.adresses.toArray()
         },null,4)],{type: "application/json"});
         const a= document.createElement("a");
 
@@ -478,7 +491,7 @@ export class Database {
 
     //Loads databases via uploaded file
     async loadDB(file) {
-        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value,this.db.webhook, async() => {
+        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value,this.db.webhook,this.db.adresses, async() => {
             const data = JSON.parse(file);
             await this.db.goods.clear();
             await this.db.buildings.clear();
@@ -488,6 +501,7 @@ export class Database {
             await this.db.diplomacy.clear();
             await this.db.value.clear();
             await this.db.webhook.clear();
+            await this.db.adresses.clear();
             await Promise.all(Object.entries(data).map(([key, val]) => {
                 return this.db[key].bulkPut(val);
             }));
@@ -572,7 +586,8 @@ export class Database {
             capacity:   await this.db.capacity.toArray(),
             diplomacy:  await this.db.diplomacy.toArray(),
             value:      await this.db.value.toArray(),
-            webhook:    await this.db.webhook.toArray()
+            webhook:    await this.db.webhook.toArray(),
+            adresses:   await this.db.adresses.toArray()
         },null,4);
         body += '\r\n'
         body += '--' + boundary + '--';
@@ -812,7 +827,6 @@ export class Database {
             })});
             // Check for consumption of goods by buildings
             let incs = {};
-            console.log(incomes)
             Object.keys(incomes).forEach(k_inc =>{
                 Object.keys(incomes[k_inc]).forEach( k => {
                     if (incomes[k_inc][k] < 0) {
@@ -825,8 +839,6 @@ export class Database {
                     };
                 })
             });
-            console.log(incs)
-            console.log(goods_aux)
             Object.values(goods_aux).forEach(good => {
                 if (good.total + good.income < 0) {
                     incs[good.name].forEach(building => {
@@ -1096,4 +1108,69 @@ export class Database {
         let aux = await this.db.buildings.get(Name);
         return aux;
     };
-}
+
+    //Messenger 
+    async fillContacts(){
+        let aux = await this.db.adresses.toArray(),
+            adresses = {};
+        aux.forEach((adres)=> {adresses[adres.name] = adres});
+        let adress_sct = document.getElementById("senders"),
+            contacts = document.getElementById("contactlist");
+        contacts.innerHTML ="";
+        adress_sct.innerHTML="";
+        Object.keys(adresses).forEach(adr => {
+            //For Messenger
+            let opt = document.createElement("option");
+            opt.innerText = adr;
+            adress_sct.appendChild(opt);
+
+            //For Contacts
+            let li = document.createElement("li"),
+                a   = document.createElement("a"),
+                img = document.createElement("img");
+            li.innerText = adr;
+            img.src = adresses[adr].avatar;
+            a.href = img.src;
+            a.appendChild(img);
+            li.appendChild(a);
+            contacts.appendChild(li);
+        });
+    };
+    async addContact(){
+        let contname = document.getElementById("contact_name"),
+            contava = document.getElementById("contact_ava");
+        await this.db.adresses.put({name:contname.value,avatar:contava.value});
+        this.protocol_list.push("Added the contact of " + contname.value + ".");
+        contname.value="";
+        contava.value="";
+        this.update();
+    };
+
+    async sendMsg() {
+        const xhr = new XMLHttpRequest(),
+            msgBox = document.querySelector("#message_dragdiv"),
+            sender_sel = document.getElementById("senders"),
+            msg_inp = msgBox.querySelector("#message_text"),
+            adress = await this.db.adresses.get(sender_sel.value);
+        const params = {
+            username: adress.name,
+            avatar_url: adress.avatar,
+            embeds: [{
+                "title": "A letter for the regents of Assignan",
+                "color": parseInt("FFFBE6",16),
+                "description": msg_inp.value
+            }]
+        };
+        
+        let hook = await this.db.webhook.get("Webhook");
+        if (hook.hook === "---") {
+            hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:");
+            await this.db.webhook.put(hook);
+        };
+        
+        xhr.open("POST", hook.hook,true);
+        xhr.setRequestHeader('Content-type', 'application/json');
+        xhr.send(JSON.stringify(params));
+        msg_inp.value="";
+    };
+};

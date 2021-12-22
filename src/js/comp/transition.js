@@ -1,4 +1,4 @@
-import { Database } from "./database.js";
+import {Database} from "./database.js"
 
 
 //These lines take care of the switching between the windows by arrows at the bottom or button clicks on the top
@@ -90,6 +90,8 @@ function manualCall() {
 document.querySelector("#primary").addEventListener("click", () => DataAs.weekPassed());
 document.querySelector("#secondary").addEventListener("click", () => { manualCall(); });
 
+
+
 //Include keyboard
 document.onkeydown = function(e) {e.repeat ? {} : ( keyPressed(e))};
 function keyPressed(e) {
@@ -100,6 +102,18 @@ function keyPressed(e) {
     if (e.ctrlKey  && e.keyCode == 76) {    //Laden via STRG + L
         e.preventDefault();
         document.getElementById('load').click();
+    };
+    if (e.ctrlKey && e.keyCode == 77) {     //Toggle Messenger
+        e.preventDefault();
+        showDrags(document.getElementById("message_dragdiv"));
+    };
+    if (e.ctrlKey && e.keyCode == 67) {     //Toggle Contacts
+        e.preventDefault();
+        showDrags(document.getElementById("contacts"));
+    };
+    if (e.ctrlKey && e.keyCode == 80) {     //Toggle Messenger
+        e.preventDefault();
+        showDrags(document.getElementById("dragdiv"));
     };
     switch(e.which) {
         case 37: // left
@@ -137,8 +151,26 @@ function keyPressed(e) {
     e.preventDefault(); // Sperrt Standardaktion (zB Hilfe bei F1)
 };
 
+//For draggable boxes
+function showDrags(elem) {
+    if (Array.from(elem.classList).includes("hidden") > 0){
+        elem.classList.remove("hidden");
+    }
+    else {
+        elem.classList.add("hidden");
+    };
+};
+
+document.getElementById("message").addEventListener("click", () => {showDrags(document.getElementById("message_dragdiv"))});
+document.getElementById("protocol_button").addEventListener("click", () => {showDrags(document.getElementById("dragdiv"))});
+document.getElementById("phonebook").addEventListener("click", () => {showDrags(document.getElementById("contacts"))});
+
+
 // Make the DIV element draggable:
 dragElement(document.getElementById("dragdiv"));
+dragElement(document.getElementById("message_dragdiv"));
+dragElement(document.getElementById("contacts"));
+
 
 function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -151,6 +183,7 @@ function dragElement(elmnt) {
   };
 
   function dragMouseDown(e) {
+      console.log(e)
     e = e || window.event;
     e.preventDefault();
     // get the mouse cursor position at startup:
@@ -180,5 +213,7 @@ function dragElement(elmnt) {
     document.onmousemove = null;
   };
 };
-//Loads the main file
+
+
+
 let DataAs = new Database();

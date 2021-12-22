@@ -14,6 +14,7 @@ body {
     min-height: -webkit-fill-available;
     min-height: -moz-available;
     background: radial-gradient(ellipse at center, var(--blue-glow) 50%,var(--shadow) 100%);
+    overflow: hidden;
 }
 .centered {
     margin: 0 auto;
@@ -117,7 +118,7 @@ body {
     width: 100%;
     aspect-ratio: 2/ 1;
 
-    padding: 1vh;
+    padding: none;
 
     border-top: 1vh solid var(--blue);
     border-right: 1vh solid var(--bright-blue);
@@ -142,7 +143,7 @@ body {
     align-self: start;
     display: flex;
     flex-direction: column;
-    width: 100vh;
+    width: 98%;
     height: max-content;
     max-height: 50vh;
     margin: 2vh auto;
@@ -150,9 +151,12 @@ body {
     overflow-y: auto;
     z-index: 1;
 
-    border: .4vh dashed var(--green);
+    padding-left: 15px;
+    padding-right: 15px;
+
+    border: 1px white;/*.4vh dashed var(--green);
     box-shadow: 0 0 1vh 0 var(--green),
-        0 0 1vh 0 var(--green) inset;
+        0 0 1vh 0 var(--green) inset;*/
 }
 .menu span {
     margin: 1vh 3vh; 

@@ -14,7 +14,8 @@
                             <h4><a href="#StatsBuildings">2.3 Statistics of buildings and sources of income</a></h4>
                     </h4>
                     <h4><a href="#Settings">3 Adjusting the statistics - Settings</a></h4>
-                    <h4><a href="#SaveLoad">3 Your own village - Save and Load</a></h4>
+                    <h4><a href="#SaveLoad">4 Your own village - Save, Load and Send</a></h4>
+                    <h4><a href="#Messenger">5 Communication even beyond Warrny's Rings of Telefonication</a></h4>
             </div>
             
             <h2 id="GeneralNavigation">General ideas and navigation</h2>
@@ -46,10 +47,13 @@
                         <li>ENTER - Triggers the "Week passed" button.</li>
                         <li>&#8592; - Triggers the window change to the left.</li>
                         <li>&#8594; - Triggers the window change to the right.</li>
-                        <li>STRG+S - Saves the database.</li>
-                        <li>STRG+L - Load a .json-file with database.</li>
+                        <li>CTRL+S - Saves the database.</li>
+                        <li>CTRL+L - Load a .json-file with database.</li>
                         <li>↓ - Turns down the volume in the order of the button, i.e. the first click completely mutes everything and the second one sets the volume to a small fraction.</li>
                         <li>↑ - Turns down the volume against the order of the button, i.e. first smaller volume, then full mute.</li>
+                        <li>CTRL+P - Toggles the Protocol window in-/visible.</li>
+                        <li>CTRL+M - Toggles the Messenger window in-/visible.</li>
+                        <li>CTRL+C - Toggles the list of contacts.</li>
                     </ul>
                 </p>
             <h2 id="MainScreen">The main screen - Statistics</h2>
@@ -103,7 +107,8 @@
                     a json is loaded).
                 </p>
                 <p>
-                    Now, you are able to add goods or buildings/sources of income without messing with the json-file. 
+                    Now, you are able to add goods or buildings/sources of income without messing with the json-file. These changes will then be saved and displayed in the protocol window
+                    (which can be toggled in-/visible with the corresponding "Protocol" button) and further be sent along with the json file to your Discord server (cf. chapter <a href="#Messenger">6</a>).
                 </p>
                 <p style="text-decoration: underline;">Adding items</p>
                 <p>Here, you can add or remove a number of existing items by writing a name, selecting one operation 
@@ -123,7 +128,7 @@
                     By clicking again the arrow button, the database will be updated and the source of income is shown in the table described by section
                     <a href="#StatsBuildings">2.3</a>.
                 </p>
-            <h2 id="SaveLoad">Your own village - Save and Load</h2>
+            <h2 id="SaveLoad">Your own village - Save, Load and Send</h2>
                 <p>
                     If it is your first time visting that page (after clearing your browser's cache),
                     you have to load a database into the system. That one is saved in a json file as 
@@ -136,7 +141,17 @@
                     current database as a json-file, which can be loaded every time you accidentally 
                     cleared the cache or you want to revert some changes.
                 </p>
-            
+                <p>
+                    By inserting the webhook of a Discord textchannel into the json or pasting it into the popping prompt, you can now also send the json-file
+                    and possibly the protocol over the passed actions to your own Discord server!
+                </p>
+            <h2 id="Messenger">Messenger to your Discord server</h2>
+                <p>
+                    Introducing the tool for ingame communication between the officials of your village and the players: 
+                    You can now use the webhook to Discord to implement letters from NPCs to your players via Discord! By clicking 
+                    on the "Messenger" button, a window pops up to deliver this message (using the same webhook as for the json-file).
+                </p>
+
             <h1>Have fun!</h1>
         </div>
 

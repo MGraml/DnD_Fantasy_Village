@@ -10,7 +10,7 @@ table {
     border-left: .5vh solid var(--dark-blue);
     border-bottom: .5vh solid var(--blue);
     border-right: .5vh solid var(--bright-blue);
-    width: 10vh;
+    width: 100px;
     height: 4.2vh;
     font-size: 2.3vh;
     transform: translate(155px, -90px)
@@ -64,23 +64,80 @@ table {
     color: black;
 }
 
-#dragdiv {
+.dragdiv {
   position: absolute;
-  top: 40px;
-  left: 80px;
   z-index: 9;
   background: linear-gradient(to right, var(--bright-blue) -7%, var(--blue) 15%, var(--blue) 35%,var(--bright-blue) 60%,var(--blue) 75%, var(--dark-blue) 95%); 
   border: 1px solid #d3d3d3;
   text-align: left;
-  overflow-x: scroll;
-  max-width: 15%;
+  overflow-x: auto;
+  max-width: 75%;
+  resize: both;
+  padding: 20px;
 }
 
-#dragdivheader {
+.dragdivheader {
   padding: 10px;
   cursor: move;
   z-index: 10;
   background: linear-gradient(to left, var(--bright-blue) -7%,var(--blue) 25%, var(--dark-blue) 95%);
   color: rgb(255, 217, 0);
-  width: 100%;
+  width: auto;
+  font-size: 22px;
+  font-weight: bolder;
+  text-align: center;
+}
+
+img {
+  border: 1px solid #d3d3d3;
+  border-radius: 120px;
+  padding: 5px ;
+  width: 40px;
+  aspect-ratio: 1;
+}
+
+img:hover {
+  box-shadow: 0 0 2px 1px var(--bright-blue);
+}
+#contactlist {
+  overflow-y: scroll;
+  overflow-x: visible;
+}
+
+#dragdiv {
+  transform: translate(50px,40px);
+}
+#message_dragdiv {
+  text-align: center;
+  transform: translate(1600px,40px);
+}
+
+#message {
+  transform: translate(-250px,605px);
+  width: 120px;
+}
+
+#message_text {
+  width: 90%;
+  height: 100px;
+}
+
+#protocol_button {
+  transform: translate(-695px,605px);
+  width: 100px;
+}
+
+#contacts {
+  transform: translate(1550px,605px);
+  min-width: 10%;
+  width: 350px;
+  height: 300px;
+}
+
+#contactlist {
+  padding-top: 5%;
+  padding-bottom: 5%;
+}
+#addcontact_button {
+  float: right;
 }

@@ -497,17 +497,7 @@ export class Database {
 
     //Sends databases to Discord
     async sendDB() {
-        
-        let file = new Blob( [JSON.stringify({
-            goods:      await this.db.goods.toArray(),
-            buildings:  await this.db.buildings.toArray(),
-            time:       await this.db.time.toArray(),
-            population: await this.db.population.toArray(),
-            capacity:   await this.db.capacity.toArray(),
-            diplomacy:  await this.db.diplomacy.toArray(),
-            value:      await this.db.value.toArray(),
-            webhook:    await this.db.webhook.toArray()
-        },null,4)],{type: "application/json"});
+        let time = await this.db.time.get("Time");
 
         let namestr = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
         let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
@@ -518,7 +508,7 @@ export class Database {
         const xhr = new XMLHttpRequest();
         const params = {
             username: "Lady Ereldra Naerth",
-            content: "Report on Assignan's current status:",
+            content: "Report on Assignan's status in week: " + time.week + " in year " + time.year + " p.F.",
             attachments: [{
                 "id": 0,
                 "description": "Report",
@@ -544,6 +534,9 @@ export class Database {
             entries.forEach(bullet => {
                 disc_comm += bullet.textContent+"\n";
             });
+            if (disc_comm === "") {
+                disc_comm = "*None*"
+            };
             params.embeds.push({
                 "title": "Protocol of passed actions",
                 "color": parseInt("7AD0E6",16),

@@ -150,13 +150,11 @@ export class Database {
                 };
                 await this.addGood(inputsItems[0].value,0,inpValTot*1,inputsItems[2].value*1,inputsItems[3].value*1,inputsItems[4].value*1);
                 if (inpValTot*1 > 0) {
-                    this.protocol_list.push(inputsItems[0].value+" were added to the storehouses.")
+                    this.protocol_list.push(inputsItems[0].value+" was added to the storehouses.")
                 }
                 else {
-                    this.protocol_list.push(inputsItems[0].value+" were removed from the storehouses.")
+                    this.protocol_list.push(inputsItems[0].value+" was removed from the storehouses.")
                 };
-                
-                this.update();
             };
         });
 
@@ -516,6 +514,7 @@ export class Database {
         if (comment === null){
             return
         }
+        let opt_sel = confirm("You are sending the current state of Assignan to the Discord server.\nDo you want to include the latest protocol in the comment?");
         const xhr = new XMLHttpRequest();
         const params = {
             username: "Lady Ereldra Naerth",
@@ -530,6 +529,7 @@ export class Database {
                 "description": "*None*"
             }]
         };
+        comment
         if (comment){
             params.embeds = [{
                 "title": "Comments:",
@@ -537,6 +537,20 @@ export class Database {
                 "description": comment
             }]
         };
+        if (opt_sel === true) {
+            let protocol = document.getElementById("protocol_list"),
+                entries = Array.from(protocol.getElementsByClassName("prot_entry")),
+                disc_comm = "";
+            entries.forEach(bullet => {
+                disc_comm += bullet.textContent+"\n";
+            });
+            params.embeds.push({
+                "title": "Protocol of passed actions",
+                "color": parseInt("7AD0E6",16),
+                "description": disc_comm
+            });
+        };
+        
         let hook = await this.db.webhook.get("Webhook");
         if (hook.hook === "---") {
             hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:")
@@ -573,11 +587,14 @@ export class Database {
         }
         xhr.send(body);
     };
+
+    //Create the protocol in a draggable box
     createProtocol () {
         for (let entry of this.protocol_list){
             let list_entry = document.createElement("li");
+            list_entry.className = "prot_entry"
             list_entry.innerText = entry;
-            document.getElementById("protocol_list").append(list_entry);
+            document.getElementById("protocol_list").appendChild(list_entry);
         };
         this.protocol_list = [];
     };

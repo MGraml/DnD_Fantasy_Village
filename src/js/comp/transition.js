@@ -111,17 +111,17 @@ function keyPressed(e) {
         e.preventDefault();
         showDrags(document.getElementById("contacts"));
     };
-    if (e.ctrlKey && e.keyCode == 80) {     //Toggle Messenger
+    if (e.ctrlKey && e.keyCode == 80) {     //Toggle Protocol
         e.preventDefault();
         showDrags(document.getElementById("dragdiv"));
+    };
+    if (e.ctrlKey && e.keyCode == 13) {     //Pass a week
+        e.preventDefault();
+        DataAs.weekPassed();
     };
     switch(e.which) {
         case 37: // left
         switchWindows(2);
-        break;
-
-        case 13: // Enter
-        DataAs.weekPassed();
         break;
 
         case 39: // right

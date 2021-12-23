@@ -109,7 +109,7 @@ img:hover {
 }
 #message_dragdiv {
   text-align: center;
-  transform: translate(420%,5%);
+  transform: translate(1600px,40px);
 }
 
 #message {
@@ -128,7 +128,7 @@ img:hover {
 }
 
 #contacts {
-  transform: translate(350%,150%);
+  transform: translate(1550px,605px);
   min-width: 10%;
   width: 350px;
   height: 300px;

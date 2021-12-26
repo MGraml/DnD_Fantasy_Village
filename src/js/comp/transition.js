@@ -16,7 +16,10 @@ function getUnhidden(tbls) {
     })
     return res;
 }
-let counter = 0;
+console.log(localStorage["mutecounter"])
+if (localStorage["mutecounter"] === undefined) {
+    localStorage["mutecounter"] = 0;
+};
 //Switch between different stages of volume
 function unmute(counter,targ) {
     document.querySelectorAll("audio").forEach(el => {
@@ -43,8 +46,12 @@ function unmute(counter,targ) {
 //Engages Volume button
 let volbtn = document.getElementById("mutebtn");
 volbtn.addEventListener("click",(item)=>{
-    counter += 1;
-    unmute(counter,item.target);
+    localStorage["mutecounter"] = localStorage["mutecounter"]*1+1;
+    unmute(localStorage["mutecounter"]*1,item.target);
+});
+//Keeping mutecounter in local storage
+window.addEventListener("load", item => {
+    unmute(localStorage["mutecounter"]*1,volbtn);
 });
 
 

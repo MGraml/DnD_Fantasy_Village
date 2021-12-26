@@ -14,9 +14,16 @@
         <audio id="riotingsound" src="src/data/Rioting.mp3"></audio>
     </head>
     <body>
-        <div id="dragdiv" class="dragdiv">
+        <div id="protocol_dragdiv" class="dragdiv">
             <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
-            <div id="dragdivheader" class="dragdivheader">Log of passed actions</div>
+            <div id="protocol_dragdivheader" class="dragdivheader">Log of passed actions</div>
+            <div>
+                Including protocol in report?
+                <label id="protocol_switch" class="switch">
+                    <input id="protocol_checkbox" type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+            </div>
             <ol id="protocol_list">
             </ol>
         </div>
@@ -72,6 +79,7 @@
             <div id="prodmod">  &#9881; </div>
             <button id="protocol_button" class="reset">Protocol</button>
             <button id="message" class="reset">Messenger</button>
+            
             <div id="reset" class="control reset">Settings</div>
             <div id="primary" class="control big-button A">Week passed</div>
             <div id="secondary" class="control big-button B">Manual</div>

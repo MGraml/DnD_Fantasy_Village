@@ -511,17 +511,21 @@ export class Database {
 
     //Sends databases to Discord
     async sendDB() {
-        let time = await this.db.time.get("Time");
-
+        let time = await this.db.time.get("Time"),
+            cntc = await this.db.adresses.get("Lady Ereldra Naerth");
+            
         let namestr = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
         let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
         if (comment === null){
             return
         }
-        let opt_sel = confirm("You are sending the current state of Assignan to the Discord server.\nDo you want to include the latest protocol in the comment?");
+        //let opt_sel = confirm("You are sending the current state of Assignan to the Discord server.\nDo you want to include the latest protocol in the comment?");
+        let opt_sel = true;
+        let checkbox_prot = document.getElementById("protocol_checkbox");
         const xhr = new XMLHttpRequest();
         const params = {
-            username: "Lady Ereldra Naerth",
+            username: cntc.name,
+            avatar_url: cntc.avatar,
             content: "Report on Assignan's status in week " + time.week + " of year " + time.year + " p.F.",
             attachments: [{
                 "id": 0,
@@ -533,7 +537,6 @@ export class Database {
                 "description": "*None*"
             }]
         };
-        comment
         if (comment){
             params.embeds = [{
                 "title": "Comments:",
@@ -541,7 +544,7 @@ export class Database {
                 "description": comment
             }]
         };
-        if (opt_sel === true) {
+        if (checkbox_prot.checked) {
             let protocol = document.getElementById("protocol_list"),
                 entries = Array.from(protocol.getElementsByClassName("prot_entry")),
                 disc_comm = "";

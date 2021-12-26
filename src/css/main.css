@@ -104,9 +104,11 @@ img:hover {
   overflow-x: visible;
 }
 
-#dragdiv {
+#protocol_dragdiv {
   transform: translate(50px,40px);
+  width: 325px;
 }
+
 #message_dragdiv {
   text-align: center;
   transform: translate(1600px,40px);
@@ -123,7 +125,72 @@ img:hover {
 }
 
 #protocol_button {
-  transform: translate(-695px,605px);
+  transform: translate(-780px,605px);
+  width: 100px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 72px;
+  height: 26px;
+  grid-area: menu;
+  float: right;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: black;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+
+}
+
+input:checked + .slider {
+  background: radial-gradient(yellow 25%, transparent 40%),repeating-conic-gradient(
+    yellow 0deg,
+    orange 30deg,
+    yellow 60deg);
+}
+input:checked + .slider:before {
+  transform: translateX(46px);
+  background-color: black;
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+};
+
+#protocol_switch {
+  transform: translate(-36.2vw,67.56vh);
   width: 100px;
 }
 

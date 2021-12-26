@@ -15,8 +15,8 @@ function getUnhidden(tbls) {
         counter += 1
     })
     return res;
-}
-console.log(localStorage["mutecounter"])
+};
+
 if (localStorage["mutecounter"] === undefined) {
     localStorage["mutecounter"] = 0;
 };
@@ -43,6 +43,7 @@ function unmute(counter,targ) {
     });
     
 };
+
 //Engages Volume button
 let volbtn = document.getElementById("mutebtn");
 volbtn.addEventListener("click",(item)=>{
@@ -120,7 +121,7 @@ function keyPressed(e) {
     };
     if (e.ctrlKey && e.keyCode == 80) {     //Toggle Protocol
         e.preventDefault();
-        showDrags(document.getElementById("dragdiv"));
+        showDrags(document.getElementById("protocol_dragdiv"));
     };
     if (e.ctrlKey && e.keyCode == 13) {     //Pass a week
         e.preventDefault();
@@ -169,12 +170,12 @@ function showDrags(elem) {
 };
 
 document.getElementById("message").addEventListener("click", () => {showDrags(document.getElementById("message_dragdiv"))});
-document.getElementById("protocol_button").addEventListener("click", () => {showDrags(document.getElementById("dragdiv"))});
+document.getElementById("protocol_button").addEventListener("click", () => {showDrags(document.getElementById("protocol_dragdiv"))});
 document.getElementById("phonebook").addEventListener("click", () => {showDrags(document.getElementById("contacts"))});
 
 
 // Make the DIV element draggable:
-dragElement(document.getElementById("dragdiv"));
+dragElement(document.getElementById("protocol_dragdiv"));
 dragElement(document.getElementById("message_dragdiv"));
 dragElement(document.getElementById("contacts"));
 
@@ -190,7 +191,6 @@ function dragElement(elmnt) {
   };
 
   function dragMouseDown(e) {
-      console.log(e)
     e = e || window.event;
     e.preventDefault();
     // get the mouse cursor position at startup:

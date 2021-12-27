@@ -1140,6 +1140,7 @@ export class Database {
             contacts = document.getElementById("contactlist");
         contacts.innerHTML ="";
         adress_sct.innerHTML="";
+        let styledef = "height: 40px";
         Object.keys(adresses).forEach(adr => {
             //For Messenger
             let opt = document.createElement("option");
@@ -1151,7 +1152,11 @@ export class Database {
                 a   = document.createElement("a"),
                 img = document.createElement("img");
             li.innerText = adr;
+            li.className = "contactlistpoint"
             img.src = adresses[adr].avatar;
+            img.className = "contactavatars";
+            li.style = styledef;
+            img.style = styledef;
             a.href = img.src;
             a.appendChild(img);
             li.appendChild(a);

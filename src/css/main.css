@@ -92,7 +92,7 @@ img {
   border: 1px solid #d3d3d3;
   border-radius: 120px;
   padding: 5px ;
-  width: 40px;
+  height: 40px;
   aspect-ratio: 1;
 }
 
@@ -204,7 +204,16 @@ input:checked + .slider:before {
 #contactlist {
   padding-top: 5%;
   padding-bottom: 5%;
+  overflow: visible;
 }
 #addcontact_button {
   float: right;
+}
+
+.contactlistpoint {
+  line-height: 40px;
+}
+
+.contactavatars {
+  float:inline-end;
 }

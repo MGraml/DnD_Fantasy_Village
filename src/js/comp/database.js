@@ -35,8 +35,28 @@ export class Database {
             });
 
         //Introduce send button for messages
-        let msg_button = document.getElementById("msgSend_button");
-        msg_button.addEventListener("click", async () => await this.sendMsg());
+        let msg_button = document.getElementById("msgSend_button"),
+            radios = Array.from(document.getElementsByName("receiver")),
+            rec = this.checkReceivers(radios);
+        radios.forEach( (rad) => {
+            rad.addEventListener("click", () => {
+                rec=this.checkReceivers(radios);
+            })
+        });
+        const sender_sel = document.getElementById("senders"),
+            msg_inp = document.querySelector("#message_text");
+
+        msg_button.addEventListener("click", async () => {
+            switch(rec) {
+                case "Discord":
+                    console.log("Sending via Discord");
+                    await this.sendMsgviaDiscord(sender_sel,msg_inp);
+                    break;
+                case "Email":
+                    this.sendMsgviaEmail(sender_sel,msg_inp);
+                    break;
+            };
+        });
         //Contact adding
         document.getElementById("addcontact_button").addEventListener("click", async () => {await this.addContact(); await this.fillContacts();});
 
@@ -518,9 +538,8 @@ export class Database {
         let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
         if (comment === null){
             return
-        }
-        //let opt_sel = confirm("You are sending the current state of Assignan to the Discord server.\nDo you want to include the latest protocol in the comment?");
-        let opt_sel = true;
+        };
+
         let checkbox_prot = document.getElementById("protocol_checkbox");
         const xhr = new XMLHttpRequest();
         const params = {
@@ -1149,11 +1168,8 @@ export class Database {
         this.update();
     };
 
-    async sendMsg() {
+    async sendMsgviaDiscord(sender_sel, msg_inp) {
         const xhr = new XMLHttpRequest(),
-            msgBox = document.querySelector("#message_dragdiv"),
-            sender_sel = document.getElementById("senders"),
-            msg_inp = msgBox.querySelector("#message_text"),
             adress = await this.db.adresses.get(sender_sel.value);
         const params = {
             username: adress.name,
@@ -1176,4 +1192,23 @@ export class Database {
         xhr.send(JSON.stringify(params));
         msg_inp.value="";
     };
+
+    async sendMsgviaEmail(sender_sel,msg_inp) {
+        const adress = await this.db.adresses.get(sender_sel.value);
+        let a = document.createElement("a");
+        a.href='mailto:?body=' + msg_inp.value + '&subject=A letter for the regents of Assignan from ' + adress.name;
+        a.click();
+        msg_inp.value = "";
+    };
+
+    checkReceivers(radios) {
+        let rec = "";
+        for (let i of radios) {
+            if (i.checked) {
+                rec = i.value
+            };
+        };
+        return rec
+    };
+
 };

@@ -35,8 +35,14 @@
             <h2>Write your message:</h2>
             From: <select id="senders"></select>
             <p>To: Aina, Cloud, Grogg and Warryn</p>
+            via <br>
+            <input type="radio" name="receiver" value="Discord">
+            <label for="Discord">Discord</label>
+            <input type="radio" name="receiver" value="Email">
+            <label for="Email">Email</label><br>
+            <br>
             <textarea id="message_text" placeholder="Type your message here."></textarea>
-            <p></p>
+            <br><br>
             <button id="msgSend_button">Send</button>
         </div>
         <div id="contacts" class="dragdiv">

@@ -198,8 +198,16 @@ export class Database {
         
         await btnBuild.addEventListener("click", async () => {
             this.db.transaction("rw",this.db.buildings, async () => {
-                    this.db.buildings.put({name: inputsBuilds[0].value,cost:{}, number: 1,yield_weekly: {[selectsBuilds[1].value]: Number(inputsBuilds[2].value)},
-                        yield_const: {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)}, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
+                let constyield_holder = {},
+                    weeklyyield_holder = {};
+                if (selectsBuilds[0].value != "0") {
+                    constyield_holder = {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)};
+                };
+                if (selectsBuilds[1].value != "0") {
+                    weeklyyield_holder = {[selectsBuilds[1].value]: Number(inputsBuilds[2].value)};
+                };
+                    this.db.buildings.put({name: inputsBuilds[0].value,cost:{}, number: 1,yield_weekly: weeklyyield_holder,
+                        yield_const: constyield_holder, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
                             async () => {
                                 this.protocol_list.push("The new building "+inputsBuilds[0].value+" was added to the village.")
                                 await this.update(); 
@@ -451,15 +459,15 @@ export class Database {
                 head = document.createElement("h1");
         head.style = "white-space: pre"
         head.innerHTML = "Assignan\n\n"+time_aux.month+" Day "+time_aux.date
-        head.align = "center"
+        head.align = "center";
         let img = document.createElement("img");
         img.src = "./src/images/Wappen_Assignan.PNG"
         img.style.height = '200px'; img.style.width = '200px';
-        img.align="right"
-        img.margin = "3vh"
-        cell1.appendChild(img)
-        container.appendChild(head)
-        container.appendChild(cell1)
+        cell1.appendChild(img);
+        cell1.style.textAlign = "center";
+        cell1.style.height = "240px";
+        container.appendChild(head);
+        container.appendChild(cell1);
         
         let     pop = document.createElement("div"), 
                 cap = document.createElement("div"),
@@ -478,7 +486,7 @@ export class Database {
         if (pop_aux.housings<pop_aux.total) {
             pop.style = "white-space: pre; color: red"
         };
-        container.appendChild(pop); 
+        container.appendChild(pop);
         
         cap.style = "white-space: pre"; cap.innerHTML = "Storage"+"\t\t&#129717;\tused\t"+cap_aux.actres.toFixed(2)+"\tof\t"+cap_aux.resources+"\n\t\t\t&#127828;\tused\t"+cap_aux.actfood.toFixed(2)+"\tof\t"+cap_aux.food; container.appendChild(cap);
         dipl.style = "white-space: pre"; dipl.innerHTML="☆\t-\t"+dipl_aux.actualfame+"\t"+dipl_aux.fameinfo+"\n🗲\t-\t"+dipl_aux.arcane; container.appendChild(dipl);
@@ -697,7 +705,6 @@ export class Database {
                 cell.style.color = color;
             };
             if (problems != undefined) {
-                console.log(problems);
                 cell.addEventListener("mouseover", async (el) => {
                 el.target.value="";
                 let titlestr = "Problems in supply chain with\n"
@@ -832,7 +839,7 @@ export class Database {
         return this.db.transaction("rw",this.db.population,this.db.goods,this.db.buildings,this.db.capacity,this.db.diplomacy, async()=>{
             let incomes = {},
                 number = {};
-            (await this.getAllBuildings()).forEach(building => {incomes[building.name] = building.yield_weekly, number[building.name]=building.number});
+            (await this.getAllBuildings()).forEach(building => {incomes[building.name] = building.yield_weekly; number[building.name]=building.number});
             let goods = await this.getAllGoods();
             let cap_aux = await this.db.capacity.get("Capacity");
             const pops = await this.db.population.get("Population");
@@ -843,12 +850,13 @@ export class Database {
             Object.keys(incomes).forEach(building => {Object.keys(incomes[building]).forEach((resource,i) => {
                 goods_aux[resource].income += Object.values(incomes[building])[i]*number[building];
                 if (goods_aux[resource].total < 0 ) {
-                    goods_aux[resource].total = 0
+                    goods_aux[resource].total = 0;
                 };
                 goods_aux[resource].deficit = [];
             })});
             // Check for consumption of goods by buildings
             let incs = {};
+            //Creates object with negative incomes
             Object.keys(incomes).forEach(k_inc =>{
                 Object.keys(incomes[k_inc]).forEach( k => {
                     if (incomes[k_inc][k] < 0) {
@@ -861,8 +869,15 @@ export class Database {
                     };
                 })
             });
+            console.log(incs)
             Object.values(goods_aux).forEach(good => {
                 if (good.total + good.income < 0) {
+                    //Gather overall consumption of the particular good
+                    let overallcons = 0;
+                    incs[good.name].forEach(building => {
+                        overallcons += incomes[building][good.name]*number[building];
+                    });
+                    console.log("overall cons:", overallcons)
                     incs[good.name].forEach(building => {
                         //console.log("Building",building)
                         Object.keys(incomes[building]).forEach(res => {
@@ -871,7 +886,12 @@ export class Database {
                                 //console.log(good.name, good.income)
                                 //console.log(res,incomes[building][res]*number[building])
                                 //console.log((incomes[building][good.name]*number[building]))
-                                goods_aux[res].income -= incomes[building][res]*number[building] * (1+(good.total)/goods_aux[good.name].income);
+                                let inc_diff = incomes[building][res] * number[building] * (good.total + good.income)/overallcons;
+                                if (inc_diff >= incomes[building][res]*number[building]) {
+                                    console.log(res,inc_diff,incomes[building][res]*number[building]);
+                                    inc_diff = incomes[building][res]*number[building];
+                                }
+                                goods_aux[res].income -= inc_diff;
                                 (goods_aux[res].deficit).push(good.name)
                             }
                         })

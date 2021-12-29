@@ -218,6 +218,53 @@ export class Database {
                                 }
                             );  
         });
+
+        this.createRelationsAdd();
+        let inpNation = document.getElementById("inpNation"),
+            inpRel = document.getElementById("inpRel"),
+            inpTreaty = document.getElementById("inpTreaty"),
+            btnRel = document.getElementById("btnRel");
+
+        await btnRel.addEventListener("click", async () => {
+            this.db.relations.put({name: inpNation.value,relval: inpRel.value*1, treaty: inpTreaty.value, income: {}, problems: ""});
+            await this.update();
+        });
+    };
+
+    //Create menu for adding new relations
+    createRelationsAdd() {
+        let container = document.getElementById("settings");
+        let head = document.createElement("h1"), Add = document.createElement("div");
+        Add.id = "AddingRelations"
+        head.innerHTML = "Add new nations for diplomatic relations";
+        container.appendChild(head);
+
+        let inpNation = document.createElement("input");
+        inpNation.placeholder = "Add name of party"
+        inpNation.type = "text";
+        inpNation.required = true;
+        inpNation.id = "inpNation";
+        Add.appendChild(inpNation);
+
+        let inpRel = document.createElement("input");
+        inpRel.placeholder = "current relation";
+        inpRel.required = true;
+        inpRel.id = "inpRel";
+        inpRel.title = "Between -100 and +100 for war and alliance respectively."
+        Add.appendChild(inpRel);
+
+        let inpTreaty = document.createElement("input");
+        inpTreaty.placeholder = "existing treaties";
+        inpTreaty.required = true;
+        inpTreaty.id = "inpTreaty";
+        Add.appendChild(inpTreaty);
+
+        let btn = document.createElement("button");
+        btn.innerHTML="▶";
+        btn.id = "btnRel"
+        Add.appendChild(btn);
+
+        container.appendChild(Add);
     };
 
     //Create menu for adding items in settings screen
@@ -507,7 +554,36 @@ export class Database {
         
         let relations = await this.db.relations.toArray();
         relations.forEach(rel => {
-            this.createCells(container,[rel.name,rel.relval,rel.treaty]);
+            this.createCells(container,[rel.name]);
+            //Create relationship selects
+            let slct = document.createElement("select");
+            for (let i = -100;i<=100;i++) {
+                let opt = document.createElement("option");
+                opt.value = i;
+                opt.innerText = i;
+                if(i === rel.relval) {opt.selected = "selected"};
+                slct.style = "text-align: center";
+                slct.appendChild(opt);
+                if (i === 0) {
+                    let opt = document.createElement("option");
+                    opt.value = "?";
+                    opt.innerText = "?";
+                    if(Number.isNaN(+rel.relval)) {opt.selected = "selected"};
+                    slct.style = "text-align: center";
+                    slct.appendChild(opt);
+                };
+            };
+            slct.addEventListener("change", async (e)=> {
+                const prev_number = rel.relval;
+                rel.relval = slct.value*1;
+                await this.db.relations.put(rel);
+                this.protocol_list.push("The relationship with "+rel.name+" was changed from "+prev_number+" to "+rel.relval+".")
+                await this.update();
+            });
+            container.appendChild(slct);
+            
+            //Create Treaty-related stuff
+            this.createCells(container,[rel.treaty]);
             let txt_yield = "",
             cell5 = document.createElement("div");
             //Create strings in subfunctions

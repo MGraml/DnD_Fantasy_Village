@@ -11,6 +11,7 @@ export class Database {
               value: 'name,total,resources,buildings',
               webhook: 'name,hook',
               adresses: 'name,avatar',
+              relations: 'name,relval,treaty,income'
           });
         //Loads Errorsound
         this.errorsnd = document.getElementById("errorsound");
@@ -122,6 +123,7 @@ export class Database {
         await this.db.value.put({name:"Value",total: 0,resources:0,buildings:0});
         await this.db.webhook.put({name:"Webhook",hook:"---"});
         await this.db.adresses.put({name:"Lady Ereldra Naerth",avatar:"---"});
+        await this.db.relations.put({name:"Aurora",relval:-50,treaty:"---",income:{}});
     };
 
     //Is called when important things happen and an update is necessary
@@ -495,146 +497,29 @@ export class Database {
         prod.innerHTML = "&#9881; "+cap_aux.prodmod+" %"
     };
 
-    //Save the databases as file
-    async saveDB() {
-        let file = new Blob( [JSON.stringify({
-            goods:      await this.db.goods.toArray(),
-            buildings:  await this.db.buildings.toArray(),
-            time:       await this.db.time.toArray(),
-            population: await this.db.population.toArray(),
-            capacity:   await this.db.capacity.toArray(),
-            diplomacy:  await this.db.diplomacy.toArray(),
-            value:      await this.db.value.toArray(),
-            webhook:    await this.db.webhook.toArray(),
-            adresses:   await this.db.adresses.toArray()
-        },null,4)],{type: "application/json"});
-        const a= document.createElement("a");
+    async createRelationsTable() {
+        let container = document.getElementById("relations");
+        container.innerHTML = "";
 
-        a.href = URL.createObjectURL(file);
-        a.download = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
-        a.click();
-
-        URL.revokeObjectURL(a.href);
-    };
-
-    //Loads databases via uploaded file
-    async loadDB(file) {
-        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, this.db.diplomacy, this.db.value,this.db.webhook,this.db.adresses, async() => {
-            const data = JSON.parse(file);
-            await this.db.goods.clear();
-            await this.db.buildings.clear();
-            await this.db.time.clear();
-            await this.db.population.clear();
-            await this.db.capacity.clear();
-            await this.db.diplomacy.clear();
-            await this.db.value.clear();
-            await this.db.webhook.clear();
-            await this.db.adresses.clear();
-            await Promise.all(Object.entries(data).map(([key, val]) => {
-                return this.db[key].bulkPut(val);
-            }));
-        }).then(async ()=> await this.update());
+        this.createCells(container, ["Realm", "Relationship", "Established treaties", "Yield of treaties", ""]);
+        this.createLine(container,5);
         
-    };
+        let relations = await this.db.relations.toArray();
+        console.log(relations);
+        relations.forEach(rel => {
+            this.createCells(container,[rel.name,rel.relval,rel.treaty]);
+            let txt_yield = "",
+            cell5 = document.createElement("div");
+            //Create strings in subfunctions
+            txt_yield += this.iterateYields(rel.income);
+            cell5.style = "white-space: pre; text-align: center";
+            cell5.innerHTML = txt_yield
+            container.appendChild(cell5)
+            this.createCells(container,[""])
+        })
 
-    //Sends databases to Discord
-    async sendDB() {
-        let time = await this.db.time.get("Time"),
-            cntc = await this.db.adresses.get("Lady Ereldra Naerth");
-            
-        let namestr = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
-        let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
-        if (comment === null){
-            return
-        };
-
-        let checkbox_prot = document.getElementById("protocol_checkbox");
-        const xhr = new XMLHttpRequest();
-        const params = {
-            username: cntc.name,
-            avatar_url: cntc.avatar,
-            content: "Report on Assignan's status in week " + time.week + " of year " + time.year + " p.F.",
-            attachments: [{
-                "id": 0,
-                "description": "Report",
-            }],
-            embeds: [{
-                "title": "Comments:",
-                "color": 16776960,
-                "description": "*None*"
-            }]
-        };
-        if (comment){
-            params.embeds = [{
-                "title": "Comments:",
-                "color": 16776960,
-                "description": comment
-            }]
-        };
-        if (checkbox_prot.checked) {
-            let protocol = document.getElementById("protocol_list"),
-                entries = Array.from(protocol.getElementsByClassName("prot_entry")),
-                disc_comm = "";
-            entries.forEach(bullet => {
-                disc_comm += bullet.textContent+"\n";
-            });
-            if (disc_comm === "") {
-                disc_comm = "*None*"
-            };
-            params.embeds.push({
-                "title": "Protocol of passed actions",
-                "color": parseInt("7AD0E6",16),
-                "description": disc_comm
-            });
-        };
         
-        let hook = await this.db.webhook.get("Webhook");
-        if (hook.hook === "---") {
-            hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:")
-        };
-        await this.db.webhook.put(hook);
-        xhr.open("POST", hook.hook,true);
-        var boundary = '---------------------------';
-        boundary += Math.floor(Math.random()*32768);
-        boundary += Math.floor(Math.random()*32768);
-        boundary += Math.floor(Math.random()*32768);
-        xhr.setRequestHeader("Content-Type", 'multipart/form-data; boundary=' + boundary);
-        var body = '';
-        body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
-        body += "payload_json";
-        //body += "\r\nContent-Type: application/json"
-        body += '"\r\n\r\n';
-        body += JSON.stringify(params);
-        body += '\r\n'
-        body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
-        body += 'files[0]"; filename='+ namestr +"\r\nContent-Type: text/plain"+ '\r\n\r\n'
-        body += JSON.stringify({
-            goods:      await this.db.goods.toArray(),
-            buildings:  await this.db.buildings.toArray(),
-            time:       await this.db.time.toArray(),
-            population: await this.db.population.toArray(),
-            capacity:   await this.db.capacity.toArray(),
-            diplomacy:  await this.db.diplomacy.toArray(),
-            value:      await this.db.value.toArray(),
-            webhook:    await this.db.webhook.toArray(),
-            adresses:   await this.db.adresses.toArray()
-        },null,4);
-        body += '\r\n'
-        body += '--' + boundary + '--';
-        xhr.onload = function() {
-        }
-        xhr.send(body);
-    };
-
-    //Create the protocol in a draggable box
-    createProtocol () {
-        for (let entry of this.protocol_list){
-            let list_entry = document.createElement("li");
-            list_entry.className = "prot_entry"
-            list_entry.innerText = entry;
-            document.getElementById("protocol_list").appendChild(list_entry);
-        };
-        this.protocol_list = [];
+        
     };
 
     //Creates Statistic page for goods and computes total value of goods for default page
@@ -743,7 +628,7 @@ export class Database {
                 slct = document.createElement("select");
             let aux = build
             valueBuildings += aux.value*aux.number
-             
+                
             let txt_cost ="";
             for (let x in aux.cost) {
                 txt_cost += x+": "+aux.cost[x] +" ";
@@ -820,6 +705,152 @@ export class Database {
         await this.db.value.put(aux_val)
     };
 
+    //Save the databases as file
+    async saveDB() {
+        let file = new Blob( [JSON.stringify({
+            goods:      await this.db.goods.toArray(),
+            buildings:  await this.db.buildings.toArray(),
+            time:       await this.db.time.toArray(),
+            population: await this.db.population.toArray(),
+            capacity:   await this.db.capacity.toArray(),
+            diplomacy:  await this.db.diplomacy.toArray(),
+            value:      await this.db.value.toArray(),
+            webhook:    await this.db.webhook.toArray(),
+            adresses:   await this.db.adresses.toArray(),
+            relations:   await this.db.relations.toArray()
+        },null,4)],{type: "application/json"});
+        const a= document.createElement("a");
+
+        a.href = URL.createObjectURL(file);
+        a.download = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
+        a.click();
+
+        URL.revokeObjectURL(a.href);
+    };
+
+    //Loads databases via uploaded file
+    async loadDB(file) {
+        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, 
+        this.db.diplomacy, this.db.value,this.db.webhook,this.db.adresses,this.db.relations, async() => {
+            const data = JSON.parse(file);
+            await this.db.goods.clear();
+            await this.db.buildings.clear();
+            await this.db.time.clear();
+            await this.db.population.clear();
+            await this.db.capacity.clear();
+            await this.db.diplomacy.clear();
+            await this.db.value.clear();
+            await this.db.webhook.clear();
+            await this.db.adresses.clear();
+            await this.db.relations.clear();
+            await Promise.all(Object.entries(data).map(([key, val]) => {
+                return this.db[key].bulkPut(val);
+            }));
+        }).then(async ()=> await this.update());
+        
+    };
+
+    //Sends databases to Discord
+    async sendDB() {
+        let time = await this.db.time.get("Time"),
+            cntc = await this.db.adresses.get("Lady Ereldra Naerth");
+            
+        let namestr = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
+        let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
+        if (comment === null){
+            return
+        };
+
+        let checkbox_prot = document.getElementById("protocol_checkbox");
+        const xhr = new XMLHttpRequest();
+        const params = {
+            username: cntc.name,
+            avatar_url: cntc.avatar,
+            content: "Report on Assignan's status in week " + time.week + " of year " + time.year + " p.F.",
+            attachments: [{
+                "id": 0,
+                "description": "Report",
+            }],
+            embeds: [{
+                "title": "Comments:",
+                "color": 16776960,
+                "description": "*None*"
+            }]
+        };
+        if (comment){
+            params.embeds = [{
+                "title": "Comments:",
+                "color": 16776960,
+                "description": comment
+            }]
+        };
+        if (checkbox_prot.checked) {
+            let protocol = document.getElementById("protocol_list"),
+                entries = Array.from(protocol.getElementsByClassName("prot_entry")),
+                disc_comm = "";
+            entries.forEach(bullet => {
+                disc_comm += bullet.textContent+"\n";
+            });
+            if (disc_comm === "") {
+                disc_comm = "*None*"
+            };
+            params.embeds.push({
+                "title": "Protocol of passed actions",
+                "color": parseInt("7AD0E6",16),
+                "description": disc_comm
+            });
+        };
+        
+        let hook = await this.db.webhook.get("Webhook");
+        if (hook.hook === "---") {
+            hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:")
+        };
+        await this.db.webhook.put(hook);
+        xhr.open("POST", hook.hook,true);
+        var boundary = '---------------------------';
+        boundary += Math.floor(Math.random()*32768);
+        boundary += Math.floor(Math.random()*32768);
+        boundary += Math.floor(Math.random()*32768);
+        xhr.setRequestHeader("Content-Type", 'multipart/form-data; boundary=' + boundary);
+        var body = '';
+        body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
+        body += "payload_json";
+        //body += "\r\nContent-Type: application/json"
+        body += '"\r\n\r\n';
+        body += JSON.stringify(params);
+        body += '\r\n'
+        body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
+        body += 'files[0]"; filename='+ namestr +"\r\nContent-Type: text/plain"+ '\r\n\r\n'
+        body += JSON.stringify({
+            goods:      await this.db.goods.toArray(),
+            buildings:  await this.db.buildings.toArray(),
+            time:       await this.db.time.toArray(),
+            population: await this.db.population.toArray(),
+            capacity:   await this.db.capacity.toArray(),
+            diplomacy:  await this.db.diplomacy.toArray(),
+            value:      await this.db.value.toArray(),
+            webhook:    await this.db.webhook.toArray(),
+            adresses:   await this.db.adresses.toArray(),
+            relations:   await this.db.relations.toArray()
+        },null,4);
+        body += '\r\n'
+        body += '--' + boundary + '--';
+        xhr.onload = function() {
+        }
+        xhr.send(body);
+    };
+
+    //Create the protocol in a draggable box
+    createProtocol () {
+        for (let entry of this.protocol_list){
+            let list_entry = document.createElement("li");
+            list_entry.className = "prot_entry"
+            list_entry.innerText = entry;
+            document.getElementById("protocol_list").appendChild(list_entry);
+        };
+        this.protocol_list = [];
+    };
+
     //Subfunction to shorten createStatBuild function
     iterateYields(obj,str) {
         if (Object.keys(obj) != 0) {
@@ -827,7 +858,13 @@ export class Database {
             for (let x in obj) {
                 txt += x+": "+obj[x] +" ";
             };
-            return str+"\n"+txt+"\n"
+            if (str != undefined) {
+                return str+"\n"+txt+"\n"
+            }
+            else {
+                return txt+"\n"
+            };
+            
         }
         else {
             return ""
@@ -879,16 +916,10 @@ export class Database {
                     });
                     console.log("overall cons:", overallcons)
                     incs[good.name].forEach(building => {
-                        //console.log("Building",building)
                         Object.keys(incomes[building]).forEach(res => {
-                            //console.log("Res",res)
                             if (res != good.name) {
-                                //console.log(good.name, good.income)
-                                //console.log(res,incomes[building][res]*number[building])
-                                //console.log((incomes[building][good.name]*number[building]))
                                 let inc_diff = incomes[building][res] * number[building] * (good.total + good.income)/overallcons;
                                 if (inc_diff >= incomes[building][res]*number[building]) {
-                                    console.log(res,inc_diff,incomes[building][res]*number[building]);
                                     inc_diff = incomes[building][res]*number[building];
                                 }
                                 goods_aux[res].income -= inc_diff;

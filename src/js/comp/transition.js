@@ -86,7 +86,11 @@ function switchSettings(targ) {
 
 //subfunction for switching between windows
 function switchWindows(offset) {
-    show(btns_top[(getUnhidden(tbls)+offset)%3].dataset.table,tbls);
+    let total_number = Array.from(document.querySelector(".controls").querySelectorAll("button")).length;
+    if (offset < 0) {
+        offset = total_number+offset;
+    };
+    show(btns_top[(getUnhidden(tbls)+offset)%total_number].dataset.table,tbls);
 }
 
 //subfunction for Manual
@@ -129,7 +133,7 @@ function keyPressed(e) {
     };
     switch(e.which) {
         case 37: // left
-        switchWindows(2);
+        switchWindows(-1);
         break;
 
         case 39: // right
@@ -224,3 +228,4 @@ function dragElement(elmnt) {
 
 
 let DataAs = new Database();
+DataAs.createRelationsTable();

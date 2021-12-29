@@ -228,4 +228,3 @@ function dragElement(elmnt) {
 
 
 let DataAs = new Database();
-DataAs.createRelationsTable();

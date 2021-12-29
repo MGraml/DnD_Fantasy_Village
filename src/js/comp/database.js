@@ -11,7 +11,7 @@ export class Database {
               value: 'name,total,resources,buildings',
               webhook: 'name,hook',
               adresses: 'name,avatar',
-              relations: 'name,relval,treaty,income'
+              relations: 'name,relval,treaty,income,problems'
           });
         //Loads Errorsound
         this.errorsnd = document.getElementById("errorsound");
@@ -50,7 +50,6 @@ export class Database {
         msg_button.addEventListener("click", async () => {
             switch(rec) {
                 case "Discord":
-                    console.log("Sending via Discord");
                     await this.sendMsgviaDiscord(sender_sel,msg_inp);
                     break;
                 case "Email":
@@ -150,6 +149,7 @@ export class Database {
         await this.createStatTot();
         await this.initSettings();
         await this.computeProdmodHousings();
+        await this.createRelationsTable();
 
         //Sets Information of hover over prodmod div
         let div_prodmod = document.getElementById("prodmod");
@@ -189,6 +189,7 @@ export class Database {
                     this.protocol_list.push(inputsItems[0].value+" was removed from the storehouses.")
                 };
             };
+            await this.update();
         });
 
         //Manage line with sources of income in settings screen
@@ -501,25 +502,21 @@ export class Database {
         let container = document.getElementById("relations");
         container.innerHTML = "";
 
-        this.createCells(container, ["Realm", "Relationship", "Established treaties", "Yield of treaties", ""]);
+        this.createCells(container, ["Realm", "Relationship", "Established treaties", "Yield of treaties", "Problems"]);
         this.createLine(container,5);
         
         let relations = await this.db.relations.toArray();
-        console.log(relations);
         relations.forEach(rel => {
             this.createCells(container,[rel.name,rel.relval,rel.treaty]);
             let txt_yield = "",
             cell5 = document.createElement("div");
             //Create strings in subfunctions
             txt_yield += this.iterateYields(rel.income);
-            cell5.style = "white-space: pre; text-align: center";
+            cell5.style = "white-space: pre;";
             cell5.innerHTML = txt_yield
             container.appendChild(cell5)
-            this.createCells(container,[""])
-        })
-
-        
-        
+            this.createCells(container,[rel.problems])
+        });
     };
 
     //Creates Statistic page for goods and computes total value of goods for default page
@@ -592,9 +589,25 @@ export class Database {
             if (problems != undefined) {
                 cell.addEventListener("mouseover", async (el) => {
                 el.target.value="";
-                let titlestr = "Problems in supply chain with\n"
-                problems.forEach(prob => {titlestr += "- "+prob + "\n"})
-                el.target.title=titlestr
+                let titlestr = "Problems in supply chain with\n",
+                    otherprobs = [],
+                    chainprob = false;
+                problems.forEach(prob => {
+                    if (prob.search("treaty") != -1) {
+                        otherprobs.push(prob);
+                    }
+                    else {
+                    titlestr += "- "+prob + "\n";
+                    chainprob = true;
+                    };
+                });
+                if (chainprob) {
+                    el.target.title=titlestr;
+                };
+               
+                otherprobs.forEach(othprob => {
+                    el.target.title += othprob+"\n";
+                });
                 })};
             cont.appendChild(cell);
         };
@@ -873,7 +886,7 @@ export class Database {
 
     //Computes the yield per week writes them into the goods database including computation of food consumption and (de-)buffs on production modifier
     computeWeeklyYield() {
-        return this.db.transaction("rw",this.db.population,this.db.goods,this.db.buildings,this.db.capacity,this.db.diplomacy, async()=>{
+        return this.db.transaction("rw",this.db.population,this.db.goods,this.db.buildings,this.db.capacity,this.db.diplomacy,this.db.relations, async()=>{
             let incomes = {},
                 number = {};
             (await this.getAllBuildings()).forEach(building => {incomes[building.name] = building.yield_weekly; number[building.name]=building.number});
@@ -883,13 +896,12 @@ export class Database {
             //One week has 8 days on Caeldaria
             let cons = 8*(pops.adult+0.5*pops.infant);
             let goods_aux = {...goods};
-            Object.keys(goods_aux).forEach(resource => {goods_aux[resource].income = 0});
+            Object.keys(goods_aux).forEach(resource => {goods_aux[resource].income = 0; goods_aux[resource].deficit = [];});
             Object.keys(incomes).forEach(building => {Object.keys(incomes[building]).forEach((resource,i) => {
                 goods_aux[resource].income += Object.values(incomes[building])[i]*number[building];
                 if (goods_aux[resource].total < 0 ) {
                     goods_aux[resource].total = 0;
                 };
-                goods_aux[resource].deficit = [];
             })});
             // Check for consumption of goods by buildings
             let incs = {};
@@ -906,7 +918,6 @@ export class Database {
                     };
                 })
             });
-            console.log(incs)
             Object.values(goods_aux).forEach(good => {
                 if (good.total + good.income < 0) {
                     //Gather overall consumption of the particular good
@@ -914,7 +925,6 @@ export class Database {
                     incs[good.name].forEach(building => {
                         overallcons += incomes[building][good.name]*number[building];
                     });
-                    console.log("overall cons:", overallcons)
                     incs[good.name].forEach(building => {
                         Object.keys(incomes[building]).forEach(res => {
                             if (res != good.name) {
@@ -996,11 +1006,41 @@ export class Database {
             
             await this.db.capacity.put(cap_aux);
             goods = {...goods_aux};
+
+            //Adding income/exchange from treaties
+            let inc_rel = {};
+            (await this.db.relations.toArray()).forEach(rel => {
+                inc_rel = {};
+                Object.keys(rel.income).every(async key => {
+                    if (goods[key].income+goods[key].total+rel.income[key] < 0) {
+                        console.log("Aborting income of treaty with",rel.name)
+                        inc_rel = {};
+                        rel.problems = "Unfulfilled treaty requirements due to missing " + key;
+                        await this.db.relations.put(rel);
+                        Object.keys(rel.income).forEach(res => {
+                            (goods[res].deficit).push("Unfulfilled treaty requirements with " + rel.name + " due to missing " + key);
+                        });
+                        return false;
+                    };
+                    if (inc_rel[key] === undefined) {
+                        inc_rel[key] = rel.income[key];
+                    }
+                    else {
+                        inc_rel[key]+=rel.income[key];
+                    };
+                    return true;
+                });
+                Object.keys(inc_rel).forEach(res => {
+                    goods[res].income += inc_rel[res];
+                });
+            });
+
             //Rounding all values of goods once per update call
             Object.keys(goods).forEach(item => {
                 goods[item].total = (goods[item].total).toFixed(3)*1;
                 goods[item].income = (goods[item].income).toFixed(3)*1;
             });
+
             await this.db.goods.bulkPut(Object.values(goods));
         }).catch(err => {
             console.error(err.stack);

@@ -167,38 +167,38 @@ export class Database {
 
     //Initializing Settings page
     async initSettings() {
-        
+        let container = document.getElementById("settings");
+        container.innerHTML="";
         //Manage line with items in settings screen
         await this.createItemsAdd();
         let add = document.getElementById("AddingGoods"),
             inputsItems = Array.from(add.querySelectorAll("input")),
             btn = add.querySelector("button"),
-            ops = document.getElementById("opt");
+            ops = document.getElementById("opt_itemadd");
         
         await btn.addEventListener("click", async () => {
             let inpValTot = inputsItems[1].value;
-            if(!(inputsItems[0].value.length === 0 || inputsItems[1].value.length === 0)){
-                if (ops.selectedOptions[0].text==="Remove") {
-                     inpValTot *= -1;
+                if(!(inputsItems[0].value.length === 0 || inputsItems[1].value.length === 0)){
+                    if (ops.selectedOptions[0].text==="Remove") {
+                            inpValTot *= -1;
+                    };
+                    await this.addGood(inputsItems[0].value,0,inpValTot*1,inputsItems[2].value*1,inputsItems[3].value*1,inputsItems[4].value*1);
+                    if (inpValTot*1 > 0) {
+                        this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were added to the storehouses.")
+                    }
+                    else {
+                        this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were removed from the storehouses.")
+                    };
                 };
-                await this.addGood(inputsItems[0].value,0,inpValTot*1,inputsItems[2].value*1,inputsItems[3].value*1,inputsItems[4].value*1);
-                if (inpValTot*1 > 0) {
-                    this.protocol_list.push(inputsItems[0].value+" was added to the storehouses.")
-                }
-                else {
-                    this.protocol_list.push(inputsItems[0].value+" was removed from the storehouses.")
-                };
-            };
-            await this.update();
+            
         });
-
         //Manage line with sources of income in settings screen
         await this.createBuildingsAdd();
         let buildAdd = document.getElementById("AddingBuilds"),
             inputsBuilds = Array.from(buildAdd.querySelectorAll("input")),
             selectsBuilds = Array.from(buildAdd.querySelectorAll("select")),
             btnBuild = buildAdd.querySelector("button");
-        
+            
         await btnBuild.addEventListener("click", async () => {
             this.db.transaction("rw",this.db.buildings, async () => {
                 let constyield_holder = {},
@@ -213,12 +213,10 @@ export class Database {
                         yield_const: constyield_holder, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
                             async () => {
                                 this.protocol_list.push("The new building "+inputsBuilds[0].value+" was added to the village.")
-                                await this.update(); 
-                                await this.createStatBuild();
+                                await this.update();
                                 }
                             );  
         });
-
         this.createRelationsAdd();
         let inpNation = document.getElementById("inpNation"),
             inpRel = document.getElementById("inpRel"),
@@ -270,7 +268,6 @@ export class Database {
     //Create menu for adding items in settings screen
     async createItemsAdd() {
         let container = document.getElementById("settings");
-        container.innerHTML="";
         let head = document.createElement("h1"), Add = document.createElement("div");
         Add.id = "AddingGoods"
         head.innerHTML = "Add additional existing or completely new items";
@@ -296,7 +293,7 @@ export class Database {
         let op = document.createElement("select");
         this.createOption(op,0,"Add");
         this.createOption(op,1,"Remove");
-        op.id ="opt";
+        op.id ="opt_itemadd";
         Add.appendChild(op)
 
         //Create number inputs via outsourced function

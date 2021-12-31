@@ -3,6 +3,11 @@ table {
     border-spacing: 0em 0px;
     color: white
 }
+
+button {
+  cursor: pointer;
+}
+
 #prodmod {
     color: white;
     background: black;
@@ -15,12 +20,21 @@ table {
     font-size: 2.3vh;
     transform: translate(155px, -90px)
 }
-.grid {
+
+.grid4 {
+  display: grid;
+  grid-template-columns: auto auto auto auto; 
+  grid-row-gap: 5px;
+  color: white;
+}
+
+.grid5 {
     display: grid;
     grid-template-columns: auto auto auto auto auto; 
     grid-row-gap: 5px;
     color: white;
-  }
+}
+
 .row5 > :where(*:nth-child(10n + 6),
                 *:nth-child(10n + 7),
                 *:nth-child(10n + 8),
@@ -66,7 +80,7 @@ table {
 
 .dragdiv {
   position: absolute;
-  z-index: 9;
+  z-index: 4;
   background: linear-gradient(to right, var(--bright-blue) -7%, var(--blue) 15%, var(--blue) 35%,var(--bright-blue) 60%,var(--blue) 75%, var(--dark-blue) 95%); 
   border: 1px solid #d3d3d3;
   text-align: left;
@@ -201,10 +215,11 @@ input:checked + .slider:before {
   height: 300px;
 }
 
-#contactlist {
+.assetlist {
   padding-top: 5%;
   padding-bottom: 5%;
   overflow: visible;
+  color: black;
 }
 #addcontact_button {
   float: right;
@@ -214,6 +229,20 @@ input:checked + .slider:before {
   line-height: 40px;
 }
 
-.contactavatars {
+.assetlist_rights {
   float:inline-end;
+}
+
+.addInc {
+  overflow-y: auto;
+}
+
+.addInc:hover {
+  box-shadow: 0 0 2px 1px var(--bright-blue);
+  cursor:pointer;
+}
+
+#incomeSub {
+  position: absolute;
+  transform: translate(34vw,5vh);
 }

@@ -58,7 +58,7 @@ window.addEventListener("load", item => {
 
 
 let btns_top = Array.from(document.querySelectorAll(".controls > button")),
-    tbls = Array.from(document.querySelectorAll(".menu > .grid"));
+    tbls = Array.from(document.querySelectorAll(".menu > .grid5"));
     
 document.querySelector(".previous").addEventListener("click", () => switchWindows(2));
 document.querySelector(".next").addEventListener("click", () => switchWindows(1));
@@ -164,7 +164,7 @@ function keyPressed(e) {
 };
 
 //For draggable boxes
-function showDrags(elem) {
+export function showDrags(elem) {
     if (Array.from(elem.classList).includes("hidden") > 0){
         elem.classList.remove("hidden");
     }
@@ -184,7 +184,7 @@ dragElement(document.getElementById("message_dragdiv"));
 dragElement(document.getElementById("contacts"));
 
 
-function dragElement(elmnt) {
+export function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   if (document.getElementById(elmnt.id + "header")) {
     // if present, the header is where you move the DIV from:

@@ -12,6 +12,7 @@
                             <h4><a href="#StatsOverall">2.1 Overall statistics</a></h4>
                             <h4><a href="#StatsGoods">2.2 Statistics of possessed goods</a></h4>
                             <h4><a href="#StatsBuildings">2.3 Statistics of buildings and sources of income</a></h4>
+                            <h4><a href="#StatsRelations">2.4 Statistics of diplomatic relations</a></h4>
                     </h4>
                     <h4><a href="#Settings">3 Adjusting the statistics - Settings</a></h4>
                     <h4><a href="#SaveLoad">4 Your own village - Save, Load and Send</a></h4>
@@ -101,6 +102,14 @@
             <p>Using that window, you can manage your buildings, monitor their yields and adjust either the number of buildings by investing resources (Keep an eye on your resources: 
                 If a red button, instead of a green one, appears when you are hovering about it, there will be nothing built. The number of missing goods can be identified by staying a bit longer with the mouse above the button.)
                 or the number of other sources of income like for example new workers, which have joint the village in the last week, supporting the existing workers.</p>
+            <h3 id="StatsRelations">Statistics of diplomatic relations</h3>
+            <p>This one gives you an overview about your diplomatic situation and shows you income of possible trade agreements.</p>
+            <p>Each one of the listed nations and parties has a certain relationship, which scales between -100 (= War) and +100 (= Alliance). 
+                The established treaties and especially their specific incomes are automatically added to the table from Sec. <a href="#StatsGoods">2.2</a> and give your economy the corresponding boost.
+                If a certain treaty cannot be fulfilled, the whole exchange of goods will be stalled for that week.</p>
+            <p>Similar to the other assets of the village, you can add it in the settings menu, described in the following chapter.</p>
+
+
             <h2 id="Settings">Adjusting the statistics - Settings</h2>
                 <p>To account for dynamic situation, where Sir Thomas Nook of the East Ind Company
                     sends his best regards and, more important, a ship full of cargo, you can click the "Settings"-button (if 
@@ -128,6 +137,15 @@
                     By clicking again the arrow button, the database will be updated and the source of income is shown in the table described by section
                     <a href="#StatsBuildings">2.3</a>.
                 </p>
+                <p style="text-decoration: underline;">Adding diplomatic ties</p>
+                <p>Another source of income are trade agreements with other parties. You can add them in this menu, by inserting a <span style="text-decoration: underline;">name</span> and 
+                a <span style="text-decoration: underline;">relationship in numbers</span> (as described in section <a href="#StatsRelations">2.4</a>).</p>
+                <p>Furthermore, you can add existing treaties with corresponding incomes, if there exist some. The income settings are, as described for the buildings, chosen by
+                    clicking onto the "Income: ---" box. The newly shown menu let you add different goods with the weekly exchange negotiated in the treaty. By clicking "Save treaty condition",
+                    you close the window and transfer the information to the former empty ("---") income box, which displays now the new income. By adding it via the last button,
+                    you benefit of the negotiated deal.
+                </p>
+
             <h2 id="SaveLoad">Your own village - Save, Load and Send</h2>
                 <p>
                     If it is your first time visting that page (after clearing your browser's cache),
@@ -143,13 +161,20 @@
                 </p>
                 <p>
                     By inserting the webhook of a Discord textchannel into the json or pasting it into the popping prompt, you can now also send the json-file
-                    and possibly the protocol over the passed actions to your own Discord server!
+                    and possibly the protocol (by toggling the slider from moon to sun) over the passed actions to your own Discord server!
                 </p>
             <h2 id="Messenger">Messenger to your Discord server</h2>
                 <p>
                     Introducing the tool for ingame communication between the officials of your village and the players: 
                     You can now use the webhook to Discord to implement letters from NPCs to your players via Discord! By clicking 
-                    on the "Messenger" button, a window pops up to deliver this message (using the same webhook as for the json-file).
+                    on the "Messenger" button, a window pops up to deliver this message.
+                </p>
+                <p>There you can open the contactlist (by clicking onto the "☎📖"-button) and add characternames and (internet urls of) pictures.
+                    The added contacts are displayed in the "Contacts"-menu and can be chosen as sender of your message in the "Messenger"-menu.
+                </p>
+                <p>You can choose between Discord or Email, before typing and sending your text. The Discord choice will send the text under the chosen name and character avatar (if available)
+                    to the Discord webhook, given in the json file.
+                    In case you prefer to communicate via Email, the tick in "Email" will forward you to your favorite mail program after clicking "Send".
                 </p>
 
             <h1>Have fun!</h1>

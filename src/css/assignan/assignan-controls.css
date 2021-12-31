@@ -101,7 +101,8 @@
     height: 4.2vh;
     font-size: 2.3vh;
     background-color: var(--blue);
-    background: linear-gradient(to right,var(--blue) 5%,var(--bright-blue) 60%,var(--blue) 95%); 
+    background: linear-gradient(to right,var(--blue) 5%,var(--bright-blue) 60%,var(--blue) 95%);
+    cursor: pointer;
 }
 
 .reset:active {

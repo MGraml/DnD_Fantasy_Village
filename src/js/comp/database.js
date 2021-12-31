@@ -1,3 +1,5 @@
+import {dragElement,showDrags} from "./transition.js";
+
 export class Database {
     constructor() {
           this.db = new Dexie("assignan_database");
@@ -217,23 +219,30 @@ export class Database {
                                 }
                             );  
         });
-        this.createRelationsAdd();
+        await this.createRelationsAdd();
         let inpNation = document.getElementById("inpNation"),
             inpRel = document.getElementById("inpRel"),
             inpTreaty = document.getElementById("inpTreaty"),
+            relAddInc = document.getElementById("relAddInc"),
             btnRel = document.getElementById("btnRel");
 
         await btnRel.addEventListener("click", async () => {
-            this.db.relations.put({name: inpNation.value,relval: inpRel.value*1, treaty: inpTreaty.value, income: {}, problems: ""});
+            console.log(relAddInc.innerText);
+            this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
+            this.protocol_list.push("The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
+            " were completed, with an exchange of " + relAddInc.innerText.replace("Income:",""));
             await this.update();
         });
+
+        container.appendChild(document.createElement("p"));
     };
 
     //Create menu for adding new relations
-    createRelationsAdd() {
+    async createRelationsAdd() {
         let container = document.getElementById("settings");
         let head = document.createElement("h1"), Add = document.createElement("div");
         Add.id = "AddingRelations"
+        Add.className = "grid5";
         head.innerHTML = "Add new nations for diplomatic relations";
         container.appendChild(head);
 
@@ -257,19 +266,151 @@ export class Database {
         inpTreaty.id = "inpTreaty";
         Add.appendChild(inpTreaty);
 
+        
+        
+        let inc = document.createElement("div");
+        await this.createIncomeSub(Add,"incomeSub","treaty",inc);
+        inc.id = "relAddInc";
+        inc.className = "addInc";
+        inc.innerText = "Income: ---";
+        Add.appendChild(inc);
+
+        inc.addEventListener("click", () => {
+            showDrags(document.getElementById("incomeSub"));
+        });
+
         let btn = document.createElement("button");
         btn.innerHTML="▶";
-        btn.id = "btnRel"
+        btn.id = "btnRel";
         Add.appendChild(btn);
 
         container.appendChild(Add);
+        
+        dragElement(document.getElementById("incomeSub"));
+    };
+
+    //Create submenu for adding weekly incomes
+    async createIncomeSub (container,id,header,incdiv) {
+        let incobj = {};
+        let dragdiv = document.createElement("div"),
+            dragdivheader = document.createElement("div"),
+            dragdivcontent = document.createElement("div"),
+            classname = "dragdiv";
+        dragdiv.className = classname+" hidden";
+        dragdiv.id = id;
+        dragdivheader.className = classname+"header";
+        dragdivheader.id = id+"header";
+        dragdivheader.innerText = "Income of " + header;
+        dragdivcontent.className = classname+"content";
+        dragdivcontent.id = id+"content";
+        
+        let inclist = document.createElement("div"),
+            inclisttext = "Income per week:";
+        inclist.className = "assetlist";
+        inclist.innerText = inclisttext + "\n---";
+        dragdivcontent.appendChild(inclist);
+        
+
+        let slct = document.createElement("select");
+        slct.id = "incItemName";
+        
+        this.createOption(slct,0,"---");
+        (await this.db.goods.toArray()).forEach(async item => {
+            this.createOption(slct,item.name,item.name);
+        });
+        dragdivcontent.appendChild(slct);
+        this.createInput(dragdivcontent,"Weekly income","incItemNumber","Add the number of items, which are included in this trade agreement.",true);
+        let btn = document.createElement("button");
+        btn.innerText = "Add";
+        dragdivcontent.appendChild(btn);
+
+        btn.addEventListener("click", () => {
+            let itemnum = document.getElementById("incItemNumber");
+            if (+itemnum.value != 0){
+                incobj[slct.value] = +itemnum.value;
+                this.updateIncomelist(inclist,inclisttext,incobj);
+            }
+            else {
+                this.errorsnd.play();
+            };
+            slct.value = 0;
+            itemnum.value = "";
+        });
+
+        let btnSave = document.createElement("button"),
+            btnSavetitle = "No assets were added to the list.",
+            btnSaveClasses_def = "nonbuildable assetlist_rights",
+            btnSaveClasses_add = btnSaveClasses_def.replace("nonbuildable","buildable");
+        btnSave.classList = btnSaveClasses_def;
+        btnSave.textContent = "Save treaty conditions.";
+        btnSave.title = btnSavetitle;
+
+        inclist.addEventListener("DOMNodeInserted" || "DOMNodeRemoved", e => {
+            if (inclist.getElementsByTagName("li").length > 0) {
+                btnSave.classList = btnSaveClasses_add;
+                btnSave.title = "Transfer incomes and close window.";
+            }
+            else {
+                btnSave.classList = btnSaveClasses_def;
+                btnSave.title = btnSavetitle;
+            };
+        });
+        
+        btnSave.addEventListener("click", () => {
+            if (btnSave.className.search(/\bbuildable\b/) >= 0) {
+                console.log(incobj);
+                showDrags(document.getElementById("incomeSub"));
+                let inccont = "Income:\n";
+                Object.keys(incobj).forEach( asset => {
+                    inccont += "• " + asset + ": " + incobj[asset] + "\n"; 
+                });
+                incdiv.innerText = inccont;
+                incdiv.value = incobj;
+                incobj = {};
+                this.updateIncomelist(inclist,inclisttext,incobj);
+            }
+            else {
+                this.errorsnd.play();
+            };
+        });
+
+        dragdiv.appendChild(dragdivheader);
+        dragdiv.appendChild(dragdivcontent);
+        dragdiv.appendChild(btnSave);
+        container.appendChild(dragdiv);
+    };
+
+    //Updates incomelist
+    updateIncomelist (container,text,incobj) {
+        container.textContent = text;
+        Object.keys(incobj).forEach( asset => {
+            let lip = document.createElement("li"),
+                btn = document.createElement("button"),
+                cellheight = "22px";
+            lip.innerText = asset + ": " + incobj[asset];
+            lip.style.height = cellheight;
+            btn.textContent = "Remove";
+            btn.value = asset;
+            btn.className = "assetlist_rights";
+            btn.style.height = cellheight;
+            lip.appendChild(btn);
+            container.appendChild(lip);
+
+            btn.addEventListener("click", () => {
+                delete incobj[asset];
+                this.updateIncomelist(container,text);
+            });
+        });
+        
+
     };
 
     //Create menu for adding items in settings screen
     async createItemsAdd() {
         let container = document.getElementById("settings");
         let head = document.createElement("h1"), Add = document.createElement("div");
-        Add.id = "AddingGoods"
+        Add.id = "AddingGoods";
+        Add.className = "grid4";
         head.innerHTML = "Add additional existing or completely new items";
         container.appendChild(head);
 
@@ -337,6 +478,7 @@ export class Database {
         let container = document.getElementById("settings");
         let head = document.createElement("h1"), Add = document.createElement("div");
         Add.id ="AddingBuilds";
+        Add.className = "grid4";
         head.innerHTML = "Add new (unbuildable) sources of income";
         container.appendChild(head);
         let inpName = document.createElement("input");
@@ -572,7 +714,7 @@ export class Database {
             };
             slct.addEventListener("change", async (e)=> {
                 const prev_number = rel.relval;
-                rel.relval = slct.value*1;
+                rel.relval = +slct.value;
                 await this.db.relations.put(rel);
                 this.protocol_list.push("The relationship with "+rel.name+" was changed from "+prev_number+" to "+rel.relval+".")
                 await this.update();
@@ -1318,7 +1460,7 @@ export class Database {
             li.innerText = adr;
             li.className = "contactlistpoint"
             img.src = adresses[adr].avatar;
-            img.className = "contactavatars";
+            img.className = "assetlist_rights";
             li.style = styledef;
             img.style = styledef;
             a.href = img.src;

@@ -1029,11 +1029,7 @@ export class Database {
             });
         };
         
-        let hook = await this.db.webhook.get("Webhook");
-        if (hook.hook === "---") {
-            hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:")
-        };
-        await this.db.webhook.put(hook);
+        let hook = await this.checkWebhook();
         xhr.open("POST", hook.hook,true);
         var boundary = '---------------------------';
         boundary += Math.floor(Math.random()*32768);
@@ -1492,17 +1488,28 @@ export class Database {
             }]
         };
         
-        let hook = await this.db.webhook.get("Webhook");
-        if (hook.hook === "---") {
-            hook.hook = prompt("There is no webhook adress in the database, probably you want to give one:");
-            await this.db.webhook.put(hook);
-        };
-        
+        let hook = await this.checkWebhook();
         xhr.open("POST", hook.hook,true);
         xhr.setRequestHeader('Content-type', 'application/json');
         xhr.send(JSON.stringify(params));
         msg_inp.value="";
     };
+
+    async checkWebhook() {
+        let hook = await this.db.webhook.get("Webhook");
+        if (hook.hook === "---") {
+            let newhook = prompt("There is no webhook adress in the database, probably you want to give one:");
+            console.log("Hook",newhook);
+            if (newhook === null || newhook === "") {
+                this.errorsnd.play();
+            }
+            else {
+                hook.hook = newhook;
+            };
+        };
+        await this.db.webhook.put(hook);
+        return hook
+    }
 
     async sendMsgviaEmail(sender_sel,msg_inp) {
         const adress = await this.db.adresses.get(sender_sel.value);

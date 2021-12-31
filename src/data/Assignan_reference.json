@@ -480,5 +480,14 @@
             "name": "Lady Ereldra Naerth",
             "avatar": ""
         }
+    ],
+    "relations": [
+        {
+            "name": "Aurora Dominion",
+            "relval": -50,
+            "treaty": "",
+            "income": {},
+            "problems": ""
+        }
     ]
 }

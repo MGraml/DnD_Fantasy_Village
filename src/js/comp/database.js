@@ -2,19 +2,12 @@ import {dragElement,showDrags} from "./transition.js";
 
 export class Database {
     constructor() {
-          this.db = new Dexie("assignan_database");
-          this.db.version(1).stores({
-              goods: 'name,income,total,valPU,food,unstorable,consmod,luxmod',
-              buildings: 'name,cost,number,yield_weekly,yield_const,value,buildable,variable',
-              time: 'name,year,week',
-              population: 'name,total,adult,infant,housings',
-              capacity: 'name,resources,food,prodmod,actres,actfood,prodmod_housings,positive_sources,negative_sources',
-              diplomacy: 'name,fame,arcane,fameinfo,actualfame',
-              value: 'name,total,resources,buildings',
-              webhook: 'name,hook',
-              adresses: 'name,avatar',
-              relations: 'name,relval,treaty,income,problems'
-          });
+        this.declareDatabase("village_database");
+
+        this.tablenames = [];
+        this.db.tables.forEach(table => {
+            this.tablenames.push(table.name);
+        });
         //Loads Errorsound
         this.errorsnd = document.getElementById("errorsound");
 
@@ -80,6 +73,24 @@ export class Database {
         this.protocol_list = [];
     };
 
+    //Declares database
+    declareDatabase(db_name){
+        this.db = new Dexie(db_name);
+        this.db.version(1).stores({
+            goods: 'name,income,total,valPU,food,unstorable,consmod,luxmod',
+            buildings: 'name,cost,number,yield_weekly,yield_const,value,buildable,variable',
+            time: 'name,year,week',
+            population: 'name,total,adult,infant,housings',
+            capacity: 'name,resources,food,prodmod,actres,actfood,prodmod_housings,positive_sources,negative_sources',
+            diplomacy: 'name,fame,arcane,fameinfo,actualfame',
+            value: 'name,total,resources,buildings',
+            webhook: 'name,hook',
+            adresses: 'name,avatar',
+            relations: 'name,relval,treaty,income,problems',
+            basics: 'name,villagename,avatar,calendar'
+        });
+    };
+
     //Initializes the Database with certain values - shouldnt be used anymore, since data is loaded via external json
     async initDatabase() {
         this.assets = ["Wood","Stone","Silver","Marble","Glass","Gold","Grapes","Pottery","Furniture","Bread","Wheat","Beef","Fish","Spiritual Food","GP"];
@@ -136,10 +147,11 @@ export class Database {
                 loadtxt.className ="hidden";
             }});
 
+        let basics_aux = await this.db.basics.get("Basics");
         //Update date on the book
         let root = document.documentElement;
         let time_aux = await this.db.time.get("Time");
-        let str = "'"+"Assignan " + time_aux.week +"/"+time_aux.year + " p.F."+"'";
+        let str = "'"+ basics_aux.villagename +" " + time_aux.week +"/"+time_aux.year + " p.F."+"'";
         root.style.setProperty('--accent-content',str);
 
         //Update all databases gradually
@@ -179,27 +191,31 @@ export class Database {
             ops = document.getElementById("opt_itemadd");
         
         await btn.addEventListener("click", async () => {
-            let inpValTot = inputsItems[1].value;
-                if(!(inputsItems[0].value.length === 0 || inputsItems[1].value.length === 0)){
-                    if (ops.selectedOptions[0].text==="Remove") {
-                            inpValTot *= -1;
-                    };
-                    await this.addGood(inputsItems[0].value,0,inpValTot*1,inputsItems[2].value*1,inputsItems[3].value*1,inputsItems[4].value*1);
-                    if (inpValTot*1 > 0) {
-                        this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were added to the storehouses.")
-                    }
-                    else {
-                        this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were removed from the storehouses.")
-                    };
+            console.log(inputsItems)
+            if (inputsItems[0].value != "") {
+                let inpValTot = +inputsItems[1].value;
+                if (ops.selectedOptions[0].text==="Remove") {
+                        inpValTot *= -1;
                 };
-            
+                await this.addGood(inputsItems[0].value,+inpValTot,+inputsItems[2].value,+inputsItems[3].value,+inputsItems[4].value);
+                if (inpValTot*1 > 0) {
+                    this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were added to the storehouses.")
+                }
+                else {
+                    this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were removed from the storehouses.")
+                };
+                    
+            }
+            else {
+                this.errorsnd.play();
+            };
         });
         //Manage line with sources of income in settings screen
         await this.createBuildingsAdd();
         let buildAdd = document.getElementById("AddingBuilds"),
             inputsBuilds = Array.from(buildAdd.querySelectorAll("input")),
             selectsBuilds = Array.from(buildAdd.querySelectorAll("select")),
-            btnBuild = buildAdd.querySelector("button");
+            btnBuild = document.getElementById("btnBuild");
             
         await btnBuild.addEventListener("click", async () => {
             this.db.transaction("rw",this.db.buildings, async () => {
@@ -227,11 +243,18 @@ export class Database {
             btnRel = document.getElementById("btnRel");
 
         await btnRel.addEventListener("click", async () => {
-            console.log(relAddInc.innerText);
-            this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
-            this.protocol_list.push("The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
-            " were completed, with an exchange of " + relAddInc.innerText.replace("Income:",""));
-            await this.update();
+            if (inpRel.value === "") {
+                inpRel.value = "?";
+            };
+            if (inpNation.value != "" && relAddInc.value != undefined) {
+                this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
+                this.protocol_list.push("The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
+                " were completed, with an exchange of " + relAddInc.innerText.replace("Income:",""));
+                await this.update();
+            }
+            else {
+                this.errorsnd.play();
+            };
         });
 
         container.appendChild(document.createElement("p"));
@@ -319,13 +342,11 @@ export class Database {
             this.createOption(slct,item.name,item.name);
         });
         dragdivcontent.appendChild(slct);
-        this.createInput(dragdivcontent,"Weekly income","incItemNumber","Add the number of items, which are included in this trade agreement.",true);
+        let itemnum = await this.createInput(dragdivcontent,"Weekly income","incItemNumber","Add the number of items, which are included in this trade agreement.",true);
         let btn = document.createElement("button");
         btn.innerText = "Add";
         dragdivcontent.appendChild(btn);
-
         btn.addEventListener("click", () => {
-            let itemnum = document.getElementById("incItemNumber");
             if (+itemnum.value != 0){
                 incobj[slct.value] = +itemnum.value;
                 this.updateIncomelist(inclist,inclisttext,incobj);
@@ -359,7 +380,7 @@ export class Database {
         btnSave.addEventListener("click", () => {
             if (btnSave.className.search(/\bbuildable\b/) >= 0) {
                 console.log(incobj);
-                showDrags(document.getElementById("incomeSub"));
+                showDrags(document.getElementById(id));
                 let inccont = "Income:\n";
                 Object.keys(incobj).forEach( asset => {
                     inccont += "• " + asset + ": " + incobj[asset] + "\n"; 
@@ -398,7 +419,7 @@ export class Database {
 
             btn.addEventListener("click", () => {
                 delete incobj[asset];
-                this.updateIncomelist(container,text);
+                this.updateIncomelist(container,text,incobj);
             });
         });
         
@@ -463,6 +484,7 @@ export class Database {
         inp.pattern        = "(\d|(\d,\d{0,2}))";
         inp.title          = title
         container.appendChild(inp);
+        return inp;
     };
 
     //Outsourced function for options
@@ -511,7 +533,18 @@ export class Database {
         });
         Add.appendChild(optWeeklyYield)
 
-        this.createInput(Add,"Weekly Income - Number","inpWeeklyYieldNumber","",false)
+        this.createInput(Add,"Weekly Income - Number","inpWeeklyYieldNumber","",false);
+
+        let inc = document.createElement("div");
+        await this.createIncomeSub(Add,"BuildincomeSub","building",inc);
+        inc.id = "buildAddInc";
+        inc.className = "addInc";
+        inc.innerText = "Income: ---";
+        Add.appendChild(inc);
+
+        inc.addEventListener("click", () => {
+            showDrags(document.getElementById("BuildincomeSub"));
+        });
 
         let op = document.createElement("select");
         this.createOption(op,true,"Number variable");
@@ -522,6 +555,7 @@ export class Database {
 
         let btn = document.createElement("button");
         btn.innerHTML="▶"
+        btn.id = "btnBuild";
         Add.appendChild(btn)
 
         container.appendChild(Add);
@@ -641,16 +675,29 @@ export class Database {
 
     //Creates default page and computes current value of several assets and in total
     async createStatTot() {
-        let time_aux = await this.db.time.get("Time");
+        let time_aux = await this.db.time.get("Time"),
+            basics_aux = await this.db.basics.get("Basics");
+        
+        //Create Favicon out of village emblem
+        let iconlink = document.createElement("link");
+        iconlink.type = "image/x-icon";
+        iconlink.rel = "shortcut icon";
+        iconlink.href = basics_aux.avatar;
+        document.getElementsByTagName("head")[0].appendChild(iconlink);
+
+        //Update Name in gamebox header
+        let logo = document.getElementById("logoGamebox");
+        logo.textContent = basics_aux.villagename + " - Economic Aspects";
+        //Create Stattable
         let container = document.getElementById("stat-tot");
         container.innerHTML="";
         let cell1 = document.createElement("div"),
                 head = document.createElement("h1");
         head.style = "white-space: pre"
-        head.innerHTML = "Assignan\n\n"+time_aux.month+" Day "+time_aux.date
+        head.innerHTML = basics_aux.villagename + "\n\n"+time_aux.month+" Day "+time_aux.date
         head.align = "center";
         let img = document.createElement("img");
-        img.src = "./src/images/Wappen_Assignan.PNG"
+        img.src = basics_aux.avatar;
         img.style.height = '200px'; img.style.width = '200px';
         cell1.appendChild(img);
         cell1.style.textAlign = "center";
@@ -935,22 +982,12 @@ export class Database {
 
     //Save the databases as file
     async saveDB() {
-        let file = new Blob( [JSON.stringify({
-            goods:      await this.db.goods.toArray(),
-            buildings:  await this.db.buildings.toArray(),
-            time:       await this.db.time.toArray(),
-            population: await this.db.population.toArray(),
-            capacity:   await this.db.capacity.toArray(),
-            diplomacy:  await this.db.diplomacy.toArray(),
-            value:      await this.db.value.toArray(),
-            webhook:    await this.db.webhook.toArray(),
-            adresses:   await this.db.adresses.toArray(),
-            relations:   await this.db.relations.toArray()
-        },null,4)],{type: "application/json"});
+        let basics_aux = await this.db.basics.get("Basics");
+        let file = new Blob( [JSON.stringify(await this.gatherDB(),null,4)],{type: "application/json"});
         const a= document.createElement("a");
 
         a.href = URL.createObjectURL(file);
-        a.download = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
+        a.download = basics_aux.villagename + "_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
         a.click();
 
         URL.revokeObjectURL(a.href);
@@ -958,19 +995,15 @@ export class Database {
 
     //Loads databases via uploaded file
     async loadDB(file) {
-        return this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.population, this.db.capacity, 
-        this.db.diplomacy, this.db.value,this.db.webhook,this.db.adresses,this.db.relations, async() => {
+        await this.db.delete().then(() => {
+            this.declareDatabase("village_database");
+        });
+        this.tablenames = [];
+        this.db.tables.forEach(table => {
+            this.tablenames.push(table.name);
+        });
+        return this.db.transaction("rw",this.tablenames, async() => {
             const data = JSON.parse(file);
-            await this.db.goods.clear();
-            await this.db.buildings.clear();
-            await this.db.time.clear();
-            await this.db.population.clear();
-            await this.db.capacity.clear();
-            await this.db.diplomacy.clear();
-            await this.db.value.clear();
-            await this.db.webhook.clear();
-            await this.db.adresses.clear();
-            await this.db.relations.clear();
             await Promise.all(Object.entries(data).map(([key, val]) => {
                 return this.db[key].bulkPut(val);
             }));
@@ -978,13 +1011,23 @@ export class Database {
         
     };
 
+    //Gathers information from database and puts it into an object
+    async gatherDB() {
+        let DB = {};
+        this.db.tables.forEach(async table => {
+            DB[table.name] = await table.toArray();
+        });
+        return DB;
+    };
+
     //Sends databases to Discord
     async sendDB() {
         let time = await this.db.time.get("Time"),
-            cntc = await this.db.adresses.get("Lady Ereldra Naerth");
+            cntc = await this.db.adresses.get("Lady Ereldra Naerth"),
+            basics_aux = await this.db.basics.get("Basics");
             
-        let namestr = "Assignan_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
-        let comment = prompt('You are sending the current state of Assignan to the Discord server.\nAdd comments, if necessary:');
+        let namestr = basics_aux.villagename + "_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
+        let comment = prompt('You are sending the current state of ' + basics_aux.villagename + ' to the Discord server.\nAdd comments, if necessary:');
         if (comment === null){
             return
         };
@@ -994,7 +1037,7 @@ export class Database {
         const params = {
             username: cntc.name,
             avatar_url: cntc.avatar,
-            content: "Report on Assignan's status in week " + time.week + " of year " + time.year + " p.F.",
+            content: "Report on status of " + basics_aux.villagename + " in week " + time.week + " of year " + time.year + " p.F.",
             attachments: [{
                 "id": 0,
                 "description": "Report",
@@ -1045,18 +1088,7 @@ export class Database {
         body += '\r\n'
         body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
         body += 'files[0]"; filename='+ namestr +"\r\nContent-Type: text/plain"+ '\r\n\r\n'
-        body += JSON.stringify({
-            goods:      await this.db.goods.toArray(),
-            buildings:  await this.db.buildings.toArray(),
-            time:       await this.db.time.toArray(),
-            population: await this.db.population.toArray(),
-            capacity:   await this.db.capacity.toArray(),
-            diplomacy:  await this.db.diplomacy.toArray(),
-            value:      await this.db.value.toArray(),
-            webhook:    await this.db.webhook.toArray(),
-            adresses:   await this.db.adresses.toArray(),
-            relations:   await this.db.relations.toArray()
-        },null,4);
+        body += JSON.stringify(await this.gatherDB(),null,4);
         body += '\r\n'
         body += '--' + boundary + '--';
         xhr.onload = function() {
@@ -1150,7 +1182,7 @@ export class Database {
                     });
                     
                 }
-            })
+            });
             let food = [], 
                 consmod = [],
                 consmod_tot = 0,
@@ -1224,7 +1256,6 @@ export class Database {
                 inc_rel = {};
                 Object.keys(rel.income).every(async key => {
                     if (goods[key].income+goods[key].total+rel.income[key] < 0) {
-                        console.log("Aborting income of treaty with",rel.name)
                         inc_rel = {};
                         rel.problems = "Unfulfilled treaty requirements due to missing " + key;
                         await this.db.relations.put(rel);
@@ -1357,7 +1388,7 @@ export class Database {
     };
 
     //Adds a particular income or total to a certain (possibly new) good
-    async addGood (Name,addInc,addTot,valPU,foodmod,luxmod){
+    async addGood (Name,addTot,valPU,foodmod,luxmod){
         this.db.transaction("rw",this.db.goods,this.db.capacity, async () => {
             let aux = await this.db.goods.get(Name),
                 cap = await this.db.capacity.get("Capacity");
@@ -1379,7 +1410,7 @@ export class Database {
                         this.errorsnd.play();
                     };
                 }
-                await this.db.goods.put({name: Name, income: addInc, total: addTot,valPU:valPU,unstorable:false,food:foodbol,consmod:foodmod,luxmod:luxmod});
+                await this.db.goods.put({name: Name, income: 0, total: addTot,valPU:valPU,unstorable:false,food:foodbol,consmod:foodmod,luxmod:luxmod});
             }
             else{
                 //Takes care of storage capacities
@@ -1477,12 +1508,13 @@ export class Database {
 
     async sendMsgviaDiscord(sender_sel, msg_inp) {
         const xhr = new XMLHttpRequest(),
-            adress = await this.db.adresses.get(sender_sel.value);
+            adress = await this.db.adresses.get(sender_sel.value),
+            basics_aux = await this.db.basics.get("Basics");
         const params = {
             username: adress.name,
             avatar_url: adress.avatar,
             embeds: [{
-                "title": "A letter for the regents of Assignan",
+                "title": "A letter for the regents of " + basics_aux.villagename,
                 "color": parseInt("FFFBE6",16),
                 "description": msg_inp.value
             }]
@@ -1499,7 +1531,6 @@ export class Database {
         let hook = await this.db.webhook.get("Webhook");
         if (hook.hook === "---") {
             let newhook = prompt("There is no webhook adress in the database, probably you want to give one:");
-            console.log("Hook",newhook);
             if (newhook === null || newhook === "") {
                 this.errorsnd.play();
             }
@@ -1512,9 +1543,10 @@ export class Database {
     }
 
     async sendMsgviaEmail(sender_sel,msg_inp) {
-        const adress = await this.db.adresses.get(sender_sel.value);
+        const adress = await this.db.adresses.get(sender_sel.value),
+            basics_aux = await this.db.basics.get("Basics");
         let a = document.createElement("a");
-        a.href='mailto:?body=' + msg_inp.value + '&subject=A letter for the regents of Assignan from ' + adress.name;
+        a.href='mailto:?body=' + msg_inp.value + '&subject=A letter for the regents of '+ basics_aux.villagename +' from ' + adress.name;
         a.click();
         msg_inp.value = "";
     };

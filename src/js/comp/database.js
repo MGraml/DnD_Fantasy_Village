@@ -685,8 +685,16 @@ export class Database {
         document.getElementsByTagName("head")[0].appendChild(iconlink);
 
         //Update Name in gamebox header
-        let logo = document.getElementById("logoGamebox");
-        logo.textContent = basics_aux.villagename + " - Economic Aspects";
+        let logo = document.getElementById("logoGamebox"),
+            logosuff = " - Economic Aspects";
+        console.log(basics_aux.villagename.length);
+        if (basics_aux.villagename.length > 8) {
+            logosuff = " - Economy";
+            if (basics_aux.villagename.length > 17) {
+                logosuff = "";
+            };
+        };
+        logo.textContent = basics_aux.villagename + logosuff;
         //Create Stattable
         let container = document.getElementById("stat-tot");
         container.innerHTML="";

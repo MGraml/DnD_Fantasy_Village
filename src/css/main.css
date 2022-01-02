@@ -114,10 +114,6 @@ img {
 img:hover {
   box-shadow: 0 0 2px 1px var(--bright-blue);
 }
-#contactlist {
-  overflow-y: scroll;
-  overflow-x: visible;
-}
 
 #protocol_dragdiv {
   transform: translate(50px,40px);

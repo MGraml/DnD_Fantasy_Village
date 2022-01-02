@@ -55,8 +55,7 @@ export class Database {
         //Contact adding
         document.getElementById("addcontact_button").addEventListener("click", async () => {await this.addContact(); await this.fillContacts();});
 
-        //If there is no other possibility, one can recreate the village by uncommenting this command:
-        
+        //If there is no other possibility, one can recreate the village by this command:
         //this.initDatabase();
         
 
@@ -91,7 +90,7 @@ export class Database {
         });
     };
 
-    //Initializes the Database with certain values - shouldnt be used anymore, since data is loaded via external json
+    //Initializes the Database with certain values - deprecated, since data is loaded via external json
     async initDatabase() {
         this.assets = ["Wood","Stone","Silver","Marble","Glass","Gold","Grapes","Pottery","Furniture","Bread","Wheat","Beef","Fish","Spiritual Food","GP"];
         this.asset_num = [5475,25,12,220,625,5,40,60,0,1250,0,700,300,0,2658];
@@ -1482,17 +1481,24 @@ export class Database {
 
             //For Contacts
             let li = document.createElement("li"),
-                a   = document.createElement("a"),
                 img = document.createElement("img");
             li.innerText = adr;
-            li.className = "contactlistpoint"
-            img.src = adresses[adr].avatar;
+            li.className = "contactlistpoint";
             img.className = "assetlist_rights";
             li.style = styledef;
             img.style = styledef;
-            a.href = img.src;
-            a.appendChild(img);
-            li.appendChild(a);
+            if (adresses[adr].avatar === "") {
+                img.src = "";
+                li.appendChild(img);
+            }
+            else {
+                let a   = document.createElement("a");
+                img.src = adresses[adr].avatar;
+                a.href = img.src;
+                a.target="_blank";
+                a.appendChild(img);
+                li.appendChild(a);
+            };
             contacts.appendChild(li);
         });
     };

@@ -18,7 +18,8 @@ button {
     width: 100px;
     height: 4.2vh;
     font-size: 2.3vh;
-    transform: translate(155px, -90px)
+    transform: translate(155px, -90px);
+    cursor: help;
 }
 
 .grid4 {

@@ -489,5 +489,13 @@
             "income": {},
             "problems": ""
         }
+    ],
+    "basics": [
+        {
+            "name": "Basics",
+            "villagename": "Assignan",
+            "avatar": "",
+            "calendar": ""
+        }
     ]
 }

@@ -990,9 +990,10 @@ export class Database {
     //Save the databases as file
     async saveDB() {
         let basics_aux = await this.db.basics.get("Basics");
-        let file = new Blob( [JSON.stringify(await this.gatherDB(),null,4)],{type: "application/json"});
+        await this.gatherDB();
+        let file = new Blob( [JSON.stringify(this.DB,null,4)],{type: "application/json"});
         const a= document.createElement("a");
-
+        console.log(this.DB,"json",JSON.stringify(this.DB,null,4))
         a.href = URL.createObjectURL(file);
         a.download = basics_aux.villagename + "_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
         a.click();
@@ -1020,11 +1021,26 @@ export class Database {
 
     //Gathers information from database and puts it into an object
     async gatherDB() {
-        let DB = {};
-        this.db.tables.forEach(async table => {
-            DB[table.name] = await table.toArray();
+        let test = {
+            goods:      await this.db.goods.toArray(),
+            buildings:  await this.db.buildings.toArray(),
+            time:       await this.db.time.toArray(),
+            population: await this.db.population.toArray(),
+            capacity:   await this.db.capacity.toArray(),
+            diplomacy:  await this.db.diplomacy.toArray(),
+            value:      await this.db.value.toArray(),
+            webhook:    await this.db.webhook.toArray(),
+            adresses:   await this.db.adresses.toArray(),
+            relations:   await this.db.relations.toArray()
+        };
+        return this.db.transaction("rw",this.tablenames, async () => {
+            this.DB = {};
+            this.db.tables.forEach(async table => {
+                this.DB[table.name] = await table.toArray();
+            });
+        }).then( async () => {
+            console.log("gathered");
         });
-        return DB;
     };
 
     //Sends databases to Discord
@@ -1094,8 +1110,9 @@ export class Database {
         body += JSON.stringify(params);
         body += '\r\n'
         body += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
-        body += 'files[0]"; filename='+ namestr +"\r\nContent-Type: text/plain"+ '\r\n\r\n'
-        body += JSON.stringify(await this.gatherDB(),null,4);
+        body += 'files[0]"; filename='+ namestr +"\r\nContent-Type: text/plain"+ '\r\n\r\n';
+        await this.gatherDB();
+        body += JSON.stringify(this.DB,null,4);
         body += '\r\n'
         body += '--' + boundary + '--';
         xhr.onload = function() {

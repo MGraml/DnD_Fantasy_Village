@@ -584,14 +584,16 @@ export class Database {
             let diplDB = await this.db.diplomacy.get("Diplomacy"), popsDB = await this.db.population.get("Population"),
                 capDB = await this.db.capacity.get("Capacity");
 
-            Object.keys(goods).forEach(res =>{
+            Object.keys(goods).every(res =>{
                 if (goods[res].unstorable ) {
                     goods[res].total = 0;
                 }
                 //Manage food first
                 else if (goods[res].food ) {
                     if (goods[res].income > capDB.food - capDB.actfood ) {
+                        console.log(capDB.food - capDB.actfood)
                         goods[res].total += - capDB.actfood + capDB.food ;
+                        return false;
                     }
                     else if (goods[res].total < goods[res].income && goods[res].income < 0){
                         goods[res].total = 0;
@@ -603,7 +605,9 @@ export class Database {
                 //then manage general resources
                 else {
                     if (goods[res].income > capDB.resources - capDB.actres ) {
+                        console.log(res,":",capDB.resources - capDB.actres)
                         goods[res].total += - capDB.actres + capDB.resources ;
+                        return false;
                     }
                     else if (goods[res].total < goods[res].income && goods[res].income < 0){
                         goods[res].total = 0;
@@ -612,6 +616,7 @@ export class Database {
                         goods[res].total += goods[res].income;
                     };
                 };
+                return true;
             });
             await this.db.goods.bulkPut(Object.values(goods));
 
@@ -687,7 +692,6 @@ export class Database {
         //Update Name in gamebox header
         let logo = document.getElementById("logoGamebox"),
             logosuff = " - Economic Aspects";
-        console.log(basics_aux.villagename.length);
         if (basics_aux.villagename.length > 8) {
             logosuff = " - Economy";
             if (basics_aux.villagename.length > 17) {
@@ -1189,6 +1193,10 @@ export class Database {
                 if (good.total + good.income < 0) {
                     //Gather overall consumption of the particular good
                     let overallcons = 0;
+                    if (incs[good.name] === undefined) {
+                        console.log("Undef",good.name,incs)
+                    }
+                    
                     incs[good.name].forEach(building => {
                         overallcons += incomes[building][good.name]*number[building];
                     });

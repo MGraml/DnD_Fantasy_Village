@@ -561,6 +561,8 @@ export class Database {
         Add.appendChild(btn)
 
         container.appendChild(Add);
+
+        dragElement(document.getElementById("BuildincomeSub"));
     };
 
     //Takes care of correct year/month

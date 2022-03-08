@@ -244,6 +244,11 @@ input:checked + .slider:before {
   transform: translate(34vw,5vh);
 }
 
+#BuildincomeSub {
+  position: absolute;
+  transform: translate(34vw,-10vh);
+}
+
 .mainselect {
   cursor: pointer;
 }

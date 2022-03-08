@@ -134,11 +134,11 @@ function keyPressed(e) {
     switch(e.which) {
         case 37: // left
         switchWindows(-1);
-        break;
+        return;
 
         case 39: // right
         switchWindows(1);
-        break;
+        return;
 
         case 112: // F1
         manualCall();

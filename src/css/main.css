@@ -243,3 +243,7 @@ input:checked + .slider:before {
   position: absolute;
   transform: translate(34vw,5vh);
 }
+
+.mainselect {
+  cursor: pointer;
+}

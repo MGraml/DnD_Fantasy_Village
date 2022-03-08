@@ -777,6 +777,7 @@ export class Database {
                     opt.innerText = "?";
                     if(Number.isNaN(+rel.relval)) {opt.selected = "selected"};
                     slct.style = "text-align: center";
+                    slct.className = "mainselect";
                     slct.appendChild(opt);
                 };
             };
@@ -938,6 +939,7 @@ export class Database {
                     opt.innerText = i;
                     if(i === aux.number) {opt.selected = "selected"};
                     slct.style = "text-align: center";
+                    slct.className = "mainselect"
                     slct.appendChild(opt);
                 };
                 slct.addEventListener("change", async (e)=> {

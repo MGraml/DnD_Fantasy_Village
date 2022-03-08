@@ -567,14 +567,24 @@ export class Database {
         let months = {"Thex": 42, "Cesyn": 40, "Lugh": 41, "Athos": 45, "Hania": 37, "Civius": 41, "Mannanán": 40, "Nemnir": 42},
             days = time.week * 8,
             j = 0;
-        while (days > 45){
+        while (days > 8){
             days -= Object.values(months)[j]
             j += 1
         };
+        if (days - 7 < 0) {
+            j -= 1
+            days += Object.values(months)[j]
+        };
         time.month = Object.keys(months)[j]
         time.date = days-7
+        
         await this.db.time.put(time)
-        return time.week -1
+        if (time.week == 1) {
+            return 41;
+        }
+        else {
+            return time.week -1;
+        };        
     };
 
     //Adds the necessary calculations to the weekPassed function

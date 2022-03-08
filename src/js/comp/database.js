@@ -190,7 +190,6 @@ export class Database {
             ops = document.getElementById("opt_itemadd");
         
         await btn.addEventListener("click", async () => {
-            console.log(inputsItems)
             if (inputsItems[0].value != "") {
                 let inpValTot = +inputsItems[1].value;
                 if (ops.selectedOptions[0].text==="Remove") {
@@ -212,27 +211,58 @@ export class Database {
         //Manage line with sources of income in settings screen
         await this.createBuildingsAdd();
         let buildAdd = document.getElementById("AddingBuilds"),
-            inputsBuilds = Array.from(buildAdd.querySelectorAll("input")),
-            selectsBuilds = Array.from(buildAdd.querySelectorAll("select")),
+            costsBuild = document.getElementById("buildcost"),
+            inputsBuilds = [document.getElementById("inpNameBuilding"), document.getElementById("inpTotalYieldNumber")],
+            selectsBuilds = [document.getElementById("buildConstantYield"), document.getElementById("optionsVary")],
+            buildAddInc = document.getElementById("buildAddInc"),
             btnBuild = document.getElementById("btnBuild");
             
+        await btnBuild.addEventListener("mouseover", async el => {
+            let buildings = await this.getAllBuildings(),
+                buildingnames = {};
+            buildings.forEach(building => {
+                buildingnames[building.name] = 1;
+            });
+            if (inputsBuilds[0].value == "" || inputsBuilds[0].value in buildingnames) {
+                btnBuild.className = "nonbuildable"
+                el.target.title = "This building is already existing!"
+            }
+            else {
+                btnBuild.className = ""
+            };
+        });
+
         await btnBuild.addEventListener("click", async () => {
-            this.db.transaction("rw",this.db.buildings, async () => {
-                let constyield_holder = {},
-                    weeklyyield_holder = {};
-                if (selectsBuilds[0].value != "0") {
-                    constyield_holder = {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)};
-                };
-                if (selectsBuilds[1].value != "0") {
-                    weeklyyield_holder = {[selectsBuilds[1].value]: Number(inputsBuilds[2].value)};
-                };
-                    this.db.buildings.put({name: inputsBuilds[0].value,cost:{}, number: 1,yield_weekly: weeklyyield_holder,
-                        yield_const: constyield_holder, value: 0,buildable: false,variable:selectsBuilds[2].value})}).then(
-                            async () => {
-                                this.protocol_list.push("The new building "+inputsBuilds[0].value+" was added to the village.")
-                                await this.update();
-                                }
-                            );  
+            let buildings = await this.getAllBuildings(),
+                buildingnames = {};
+            buildings.forEach(building => {
+                buildingnames[building.name] = 1;
+            });
+            if (inputsBuilds[0].value == "" || inputsBuilds[0].value in buildingnames) {
+                this.errorsnd.play();
+            }
+            else {
+                this.db.transaction("rw",this.db.buildings, async () => {
+                    let constyield_holder = {};
+                    if (selectsBuilds[0].value != "0") {
+                        constyield_holder = {[selectsBuilds[0].value]: Number(inputsBuilds[1].value)};
+                    };
+                    let manually_variable = false,
+                        buildably_variable=false;
+                    if (selectsBuilds[1].value == true) {
+                        manually_variable = true;
+                    }
+                    else {
+                        buildably_variable = true;
+                    };
+                    this.db.buildings.put({name: inputsBuilds[0].value,cost: costsBuild.value, number: 0,yield_weekly: buildAddInc.value,
+                            yield_const: constyield_holder, value: 0,buildable: buildably_variable,variable:manually_variable})
+                }).then(async () => {
+                            this.protocol_list.push("The new building "+inputsBuilds[0].value+" was added to the village.")
+                            await this.update();
+                            }
+                        );  
+            };
         });
         await this.createRelationsAdd();
         let inpNation = document.getElementById("inpNation"),
@@ -244,9 +274,6 @@ export class Database {
         await btnRel.addEventListener("click", async () => {
             if (inpRel.value === "") {
                 inpRel.value = "?";
-            };
-            if (relAddInc.value == undefined) {
-                relAddInc.value = {};
             };
             if (inpNation.value != "") {
                 this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
@@ -294,9 +321,9 @@ export class Database {
         
         
         let inc = document.createElement("div");
-        await this.createIncomeSub(Add,"incomeSub","treaty",inc);
+        await this.createIncomeSub(Add,"incomeSub","treaty",inc,true);
         inc.id = "relAddInc";
-        inc.className = "addInc";
+        inc.className = "button_popupwindow";
         inc.innerText = "Income: ---";
         Add.appendChild(inc);
 
@@ -315,22 +342,34 @@ export class Database {
     };
 
     //Create submenu for adding weekly incomes
-    async createIncomeSub (container,id,header,incdiv) {
+    async createIncomeSub (container,id,header,incdiv,bool_income,constrained_select) {
         let incobj = {};
         let dragdiv = document.createElement("div"),
             dragdivheader = document.createElement("div"),
             dragdivcontent = document.createElement("div"),
             classname = "dragdiv";
+        //Avoids problems with unset values
+        incdiv.value = {};
+
         dragdiv.className = classname+" hidden";
         dragdiv.id = id;
         dragdivheader.className = classname+"header";
         dragdivheader.id = id+"header";
-        dragdivheader.innerText = "Income of " + header;
+        if (bool_income == true) {
+            dragdivheader.innerText = "Income of " + header;
+        }
+        else {
+            dragdivheader.innerText = "Cost of " + header;
+        }
+        
         dragdivcontent.className = classname+"content";
         dragdivcontent.id = id+"content";
         
         let inclist = document.createElement("div"),
             inclisttext = "Income per week:";
+        if (bool_income == false) {
+            inclisttext = "Costs:"
+        };
         inclist.className = "assetlist";
         inclist.innerText = inclisttext + "\n---";
         dragdivcontent.appendChild(inclist);
@@ -344,7 +383,14 @@ export class Database {
             this.createOption(slct,item.name,item.name);
         });
         dragdivcontent.appendChild(slct);
-        let itemnum = await this.createInput(dragdivcontent,"Weekly income","incItemNumber","Add the number of items, which are included in this trade agreement.",true);
+        let input_placeholder = "Weekly income",
+            input_id = "incItemNumber";
+        if (bool_income === false) {
+            input_placeholder = "Costs";
+            input_id = "costItemNumber"
+        };
+        let itemnum = await this.createInput(dragdivcontent,input_placeholder,input_id,"Add the number of items, which are produced by this asset.",true);
+        
         let btn = document.createElement("button");
         btn.innerText = "Add";
         dragdivcontent.appendChild(btn);
@@ -365,13 +411,13 @@ export class Database {
             btnSaveClasses_def = "nonbuildable assetlist_rights",
             btnSaveClasses_add = btnSaveClasses_def.replace("nonbuildable","buildable");
         btnSave.classList = btnSaveClasses_def;
-        btnSave.textContent = "Save treaty conditions.";
+        btnSave.textContent = "Save conditions.";
         btnSave.title = btnSavetitle;
 
         inclist.addEventListener("DOMNodeInserted" || "DOMNodeRemoved", e => {
             if (inclist.getElementsByTagName("li").length > 0) {
                 btnSave.classList = btnSaveClasses_add;
-                btnSave.title = "Transfer incomes and close window.";
+                btnSave.title = "Transfer production/consumption and close window.";
             }
             else {
                 btnSave.classList = btnSaveClasses_def;
@@ -381,9 +427,8 @@ export class Database {
         
         btnSave.addEventListener("click", () => {
             if (btnSave.className.search(/\bbuildable\b/) >= 0) {
-                console.log(incobj);
                 showDrags(document.getElementById(id));
-                let inccont = "Income:\n";
+                let inccont = input_placeholder + "\n";
                 Object.keys(incobj).forEach( asset => {
                     inccont += "• " + asset + ": " + incobj[asset] + "\n"; 
                 });
@@ -391,6 +436,15 @@ export class Database {
                 incdiv.value = incobj;
                 incobj = {};
                 this.updateIncomelist(inclist,inclisttext,incobj);
+                if (bool_income === false && incdiv.value != {}) {
+                    console.log("Sperre variable Auswahl");
+                    console.log(constrained_select);
+                    let options_select_variable = constrained_select.querySelector("#optVary_variable"),
+                    options_select_buildable = constrained_select.querySelector("#optVary_buildable");
+                    options_select_variable.disabled = true;
+                    options_select_buildable.selected = true;
+                };
+                
             }
             else {
                 this.errorsnd.play();
@@ -490,10 +544,13 @@ export class Database {
     };
 
     //Outsourced function for options
-    createOption(container,value,text) {
+    createOption(container,value,text,id) {
         let option          = document.createElement("option");
             option.value        = value;
             option.innerText    = text;
+            if (id != undefined) {
+                option.id = id;
+            }
             container.appendChild(option);
     };
 
@@ -505,14 +562,26 @@ export class Database {
         Add.className = "grid4";
         head.innerHTML = "Add new (unbuildable) sources of income";
         container.appendChild(head);
-        let inpName = document.createElement("input");
+        let inpNameBuilding = document.createElement("input");
         let builds = await this.getAllBuildings();
-        inpName.placeholder="Add name"
-        inpName.type = "text"
-        inpName.required = true
-        inpName.id="inpName"
-        Add.appendChild(inpName);
+        inpNameBuilding.placeholder="Add name"
+        inpNameBuilding.type = "text"
+        inpNameBuilding.required = true
+        inpNameBuilding.id="inpNameBuilding"
+        Add.appendChild(inpNameBuilding);
+        //op moved from downstairs to include it in createIncomeSub for costs
+        let op = document.createElement("select");
+        let cost = document.createElement("div");
+        await this.createIncomeSub(Add,"BuildcostSub","building",cost,false,op);
+        cost.id = "buildcost";
+        cost.className = "button_popupwindow";
+        cost.innerText = "Costs to build: ---";
+        Add.appendChild(cost);
 
+        cost.addEventListener("click", () => {
+            showDrags(document.getElementById("BuildcostSub"));
+        });
+        
 
         let optTotalYield = document.createElement("select"),
             incomes = {};
@@ -523,10 +592,12 @@ export class Database {
         for (let k in values) {
             this.createOption(optTotalYield,values[k],texts[k]);
         };
+        optTotalYield.id = "buildConstantYield"
         Add.appendChild(optTotalYield)
 
         this.createInput(Add,"Constant Yield - Number","inpTotalYieldNumber","",false)
 
+        /*
         let optWeeklyYield = document.createElement("select");
         this.createOption(optWeeklyYield,0,"---");
         let goods = await this.getAllGoods();
@@ -536,21 +607,21 @@ export class Database {
         Add.appendChild(optWeeklyYield)
 
         this.createInput(Add,"Weekly Income - Number","inpWeeklyYieldNumber","",false);
-
+        */
         let inc = document.createElement("div");
-        await this.createIncomeSub(Add,"BuildincomeSub","building",inc);
+        await this.createIncomeSub(Add,"BuildincomeSub","building",inc,true);
         inc.id = "buildAddInc";
-        inc.className = "addInc";
-        inc.innerText = "Income: ---";
+        inc.className = "button_popupwindow";
+        inc.innerText = "Weekly Income: ---";
         Add.appendChild(inc);
 
         inc.addEventListener("click", () => {
             showDrags(document.getElementById("BuildincomeSub"));
         });
-
-        let op = document.createElement("select");
-        this.createOption(op,true,"Number variable");
-        this.createOption(op,false,"Number fixed to 1");
+        // Shifted creation of op upwards to include it in createIncomeSub for costs
+        //let op = document.createElement("select");
+        this.createOption(op,true,"Number can be varied","optVary_variable");
+        this.createOption(op,false,"Buildable","optVary_buildable");
         
         op.id ="optionsVary";
         Add.appendChild(op)
@@ -563,6 +634,7 @@ export class Database {
         container.appendChild(Add);
 
         dragElement(document.getElementById("BuildincomeSub"));
+        dragElement(document.getElementById("BuildcostSub"));
     };
 
     //Takes care of correct year/month
@@ -606,7 +678,6 @@ export class Database {
                 //Manage food first
                 else if (goods[res].food ) {
                     if (goods[res].income > capDB.food - capDB.actfood ) {
-                        console.log(capDB.food - capDB.actfood)
                         goods[res].total += - capDB.actfood + capDB.food ;
                         return false;
                     }
@@ -620,7 +691,6 @@ export class Database {
                 //then manage general resources
                 else {
                     if (goods[res].income > capDB.resources - capDB.actres ) {
-                        console.log(res,":",capDB.resources - capDB.actres)
                         goods[res].total += - capDB.actres + capDB.resources ;
                         return false;
                     }
@@ -1014,7 +1084,6 @@ export class Database {
         await this.gatherDB();
         let file = new Blob( [JSON.stringify(this.DB,null,4)],{type: "application/json"});
         const a= document.createElement("a");
-        console.log(this.DB,"json",JSON.stringify(this.DB,null,4))
         a.href = URL.createObjectURL(file);
         a.download = basics_aux.villagename + "_databases_"+ (new Date()).toDateString().replaceAll(" ", "_")+".json";
         a.click();

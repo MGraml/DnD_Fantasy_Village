@@ -230,11 +230,11 @@ input:checked + .slider:before {
   float:inline-end;
 }
 
-.addInc {
+.button_popupwindow {
   overflow-y: auto;
 }
 
-.addInc:hover {
+.button_popupwindow:hover {
   box-shadow: 0 0 2px 1px var(--bright-blue);
   cursor:pointer;
 }

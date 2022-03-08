@@ -245,7 +245,10 @@ export class Database {
             if (inpRel.value === "") {
                 inpRel.value = "?";
             };
-            if (inpNation.value != "" && relAddInc.value != undefined) {
+            if (relAddInc.value == undefined) {
+                relAddInc.value = {};
+            };
+            if (inpNation.value != "") {
                 this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
                 this.protocol_list.push("The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
                 " were completed, with an exchange of " + relAddInc.innerText.replace("Income:",""));
@@ -749,7 +752,7 @@ export class Database {
         dipl.style = "white-space: pre"; dipl.innerHTML="☆\t-\t"+dipl_aux.actualfame+"\t"+dipl_aux.fameinfo+"\n🗲\t-\t"+dipl_aux.arcane; container.appendChild(dipl);
         val.style = "white-space: pre"; val.innerHTML = "\&#129689; \tin \ttotal\t" + val_aux.total.toFixed(2) + "\n\tin\t&#127828;&#129717\t" + val_aux.resources.toFixed(2) + "\n\tin\t&#127968;&#127970;\t" + val_aux.buildings.toFixed(2); container.appendChild(val);
         let prod = document.getElementById("prodmod");
-        prod.innerHTML = "&#9881; "+cap_aux.prodmod+" %"
+        prod.innerHTML = "&#9881; "+cap_aux.prodmod+" %";
     };
 
     async createRelationsTable() {

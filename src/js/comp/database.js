@@ -270,15 +270,23 @@ export class Database {
             inpTreaty = document.getElementById("inpTreaty"),
             relAddInc = document.getElementById("relAddInc"),
             btnRel = document.getElementById("btnRel");
+        
 
         await btnRel.addEventListener("click", async () => {
             if (inpRel.value === "") {
                 inpRel.value = "?";
             };
             if (inpNation.value != "") {
+                let income_text = "";
+                if (relAddInc.firstChild.innerText == undefined) {
+                    income_text = "---";
+                }
+                else {
+                    income_text = relAddInc.firstChild.innerText.replace("Weekly income","")
+                };
                 this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
                 this.protocol_list.push("The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
-                " were completed, with an exchange of " + relAddInc.innerText.replace("Income:",""));
+                " were completed, with an weekly exchange of " + income_text);
                 await this.update();
             }
             else {
@@ -321,15 +329,11 @@ export class Database {
         
         
         let inc = document.createElement("div");
-        await this.createIncomeSub(Add,"incomeSub","treaty",inc,true);
         inc.id = "relAddInc";
         inc.className = "button_popupwindow";
         inc.innerText = "Income: ---";
+        await this.createIncomeSub(Add,"incomeSub","treaty",inc,true);
         Add.appendChild(inc);
-
-        inc.addEventListener("click", () => {
-            showDrags(document.getElementById("incomeSub"));
-        });
 
         let btn = document.createElement("button");
         btn.innerHTML="▶";
@@ -343,13 +347,15 @@ export class Database {
 
     //Create submenu for adding weekly incomes
     async createIncomeSub (container,id,header,incdiv,bool_income,constrained_select) {
+        
         let incobj = {};
         let dragdiv = document.createElement("div"),
             dragdivheader = document.createElement("div"),
             dragdivcontent = document.createElement("div"),
             classname = "dragdiv";
-        //Avoids problems with unset values
+        //Avoids problems with unset values and gathers original text in div
         incdiv.value = {};
+        let incdiv_innertext_original = incdiv.innerText;
 
         dragdiv.className = classname+" hidden";
         dragdiv.id = id;
@@ -389,7 +395,7 @@ export class Database {
             input_placeholder = "Costs";
             input_id = "costItemNumber"
         };
-        let itemnum = await this.createInput(dragdivcontent,input_placeholder,input_id,"Add the number of items, which are produced by this asset.",true);
+        let itemnum = await this.createInput(dragdivcontent,input_placeholder,input_id,"Add the number of items, which are produced/consumed by this asset.",true);
         
         let btn = document.createElement("button");
         btn.innerText = "Add";
@@ -432,23 +438,41 @@ export class Database {
                 Object.keys(incobj).forEach( asset => {
                     inccont += "• " + asset + ": " + incobj[asset] + "\n"; 
                 });
-                incdiv.innerText = inccont;
+                //Inserting text in new subdiv 
+                //incdiv.innerText = inccont;
                 incdiv.value = incobj;
                 incobj = {};
                 this.updateIncomelist(inclist,inclisttext,incobj);
                 if (bool_income === false && incdiv.value != {}) {
-                    console.log("Sperre variable Auswahl");
-                    console.log(constrained_select);
                     let options_select_variable = constrained_select.querySelector("#optVary_variable"),
                     options_select_buildable = constrained_select.querySelector("#optVary_buildable");
                     options_select_variable.disabled = true;
                     options_select_buildable.selected = true;
                 };
-                
+                //Insert Remove button and display it together with text in new sub-div structure
+                let btnRemove = document.createElement("button"),
+                    incdiv_subdiv_text = document.createElement("div");
+                //Clearing Text of main div and creating new one
+                incdiv.innerText = "";
+                incdiv_subdiv_text.innerText = inccont;
+                btnRemove.innerText = "Remove assets";
+                btnRemove.addEventListener("click", el => {
+                    //blocks the parent click Eventlistener
+                    el.stopImmediatePropagation();
+                    incdiv.value = {};
+                    incdiv.innerHTML = incdiv_innertext_original;
+                });
+                incdiv.appendChild(incdiv_subdiv_text);
+                incdiv.appendChild(btnRemove);
             }
             else {
                 this.errorsnd.play();
             };
+        });
+
+        //Enables showing of resource menu
+        incdiv.addEventListener("click", () => {
+            showDrags(dragdiv);
         });
 
         dragdiv.appendChild(dragdivheader);
@@ -572,16 +596,11 @@ export class Database {
         //op moved from downstairs to include it in createIncomeSub for costs
         let op = document.createElement("select");
         let cost = document.createElement("div");
-        await this.createIncomeSub(Add,"BuildcostSub","building",cost,false,op);
         cost.id = "buildcost";
         cost.className = "button_popupwindow";
         cost.innerText = "Costs to build: ---";
-        Add.appendChild(cost);
-
-        cost.addEventListener("click", () => {
-            showDrags(document.getElementById("BuildcostSub"));
-        });
-        
+        await this.createIncomeSub(Add,"BuildcostSub","building",cost,false,op);
+        Add.appendChild(cost);        
 
         let optTotalYield = document.createElement("select"),
             incomes = {};
@@ -609,15 +628,13 @@ export class Database {
         this.createInput(Add,"Weekly Income - Number","inpWeeklyYieldNumber","",false);
         */
         let inc = document.createElement("div");
-        await this.createIncomeSub(Add,"BuildincomeSub","building",inc,true);
         inc.id = "buildAddInc";
         inc.className = "button_popupwindow";
         inc.innerText = "Weekly Income: ---";
+        await this.createIncomeSub(Add,"BuildincomeSub","building",inc,true);
+        
         Add.appendChild(inc);
 
-        inc.addEventListener("click", () => {
-            showDrags(document.getElementById("BuildincomeSub"));
-        });
         // Shifted creation of op upwards to include it in createIncomeSub for costs
         //let op = document.createElement("select");
         this.createOption(op,true,"Number can be varied","optVary_variable");

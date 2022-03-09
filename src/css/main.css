@@ -44,6 +44,7 @@ button {
     background: linear-gradient(to right,var(--blue) 25%,var(--bright-blue) 60%,var(--blue) 85%);
     color: var(--dark-blue);
 }
+
 #stat-tot {
     grid-template-columns: auto auto;
     margin: 5vh;
@@ -232,6 +233,9 @@ input:checked + .slider:before {
 
 .button_popupwindow {
   overflow-y: auto;
+  display: grid;
+  grid-template-columns: auto auto; 
+  grid-row-gap: 5px;
 }
 
 .button_popupwindow:hover {

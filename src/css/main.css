@@ -117,8 +117,14 @@ img:hover {
 }
 
 #protocol_dragdiv {
-  transform: translate(50px,40px);
+  transform: translate(25px,40px);
   width: 325px;
+}
+
+#calendar_dragdiv {
+  transform: translate(10px,600px);
+  width: 350px;
+  resize:none;
 }
 
 #message_dragdiv {
@@ -137,8 +143,78 @@ img:hover {
 }
 
 #protocol_button {
+  transform: translate(-953px,605px);
+  width: 100px;
+}
+
+#calendar_button {
   transform: translate(-780px,605px);
   width: 100px;
+}
+
+#calendar_control {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  text-align: center;
+  gap: 5px;
+}
+
+#calendar_control > button {
+  border-top: .5vh solid var(--blue);
+  border-right: .5vh solid var(--dark-blue);
+  border-bottom: .5vh solid var(--blue);
+  border-left: .5vh solid var(--bright-blue);
+  background-color: var(--blue);
+  background: linear-gradient(to right,var(--blue) 5%,var(--bright-blue) 60%,var(--blue) 95%);
+}
+
+#calendar_control > button:active {
+  box-shadow: 0 0 2px 1px rgb(255, 217, 0);
+}
+
+#calendar_reset_button {
+  grid-column-start: 1;
+  grid-column-end: 4;
+}
+
+#calendar_year {
+  font-size: x-large;
+  font-weight: 900;
+  font-family: 'Trebuchet MS';
+}
+
+#calendar_table > div{
+  margin: 5px;
+}
+
+.monthdiv {
+  display: grid;
+  grid-template-columns: 70px 30px 30px 30px 30px 30px 30px;
+  text-align: center;
+  gap: 5px;
+}
+
+.weekdiv_future {
+  background-color: rgb(255, 204, 109);
+}
+
+.monthdiv > div:hover {
+  box-shadow: 0 0 2px 1px var(--blue-glow);
+}
+
+#currentweekdiv {
+  background-color: rgb(255, 94, 0);
+  cursor: help;
+}
+
+#calendar_weeks_header:hover {
+  box-shadow: none;
+}
+
+
+.weekdiv_passed {
+  background-color: rgb(161, 145, 114);
+  cursor: help;
 }
 
 .switch {
@@ -256,3 +332,9 @@ input:checked + .slider:before {
 .mainselect {
   cursor: pointer;
 }
+
+#calendar_weeks_header {
+  grid-column-start: 2;
+  grid-column-end: 8;
+  background-color: transparent;
+};

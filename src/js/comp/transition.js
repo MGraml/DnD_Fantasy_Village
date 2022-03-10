@@ -115,17 +115,17 @@ function keyPressed(e) {
         e.preventDefault();
         document.getElementById('load').click();
     };
-    if (e.ctrlKey && e.keyCode == 77) {     //Toggle Messenger
+    if (e.ctrlKey && e.keyCode == 77) {     //Toggle Messenger and contacts
         e.preventDefault();
-        showDrags(document.getElementById("message_dragdiv"));
-    };
-    if (e.ctrlKey && e.keyCode == 67) {     //Toggle Contacts
-        e.preventDefault();
-        showDrags(document.getElementById("contacts"));
+        messenger_and_contact_toggle();
     };
     if (e.ctrlKey && e.keyCode == 80) {     //Toggle Protocol
         e.preventDefault();
         showDrags(document.getElementById("protocol_dragdiv"));
+    };
+    if (e.ctrlKey && e.keyCode == 67) {     //Toggle Calendar
+        e.preventDefault();
+        showDrags(document.getElementById("calendar_dragdiv"));
     };
     if (e.ctrlKey && e.keyCode == 13) {     //Pass a week
         e.preventDefault();
@@ -173,16 +173,29 @@ export function showDrags(elem) {
     };
 };
 
-document.getElementById("message").addEventListener("click", () => {showDrags(document.getElementById("message_dragdiv"))});
-document.getElementById("protocol_button").addEventListener("click", () => {showDrags(document.getElementById("protocol_dragdiv"))});
-document.getElementById("phonebook").addEventListener("click", () => {showDrags(document.getElementById("contacts"))});
+//Initializes messenger button, such that it toggles contacts together with messenger window
+function messenger_and_contact_toggle() {
+    let contactdiv = document.getElementById("contacts"),
+            message_dragdiv = document.getElementById("message_dragdiv");
+        showDrags(message_dragdiv);
+        if (message_dragdiv.className.includes("hidden")) {
+            contactdiv.classList.add("hidden");
+        }
+        else {
+            contactdiv.classList.remove("hidden");
+        };
+};
 
+document.getElementById("message").addEventListener("click", () => {messenger_and_contact_toggle()});
+document.getElementById("protocol_button").addEventListener("click", () => {showDrags(document.getElementById("protocol_dragdiv"))});
+document.getElementById("calendar_button").addEventListener("click", () => {showDrags(document.getElementById("calendar_dragdiv"))});
+document.getElementById("phonebook").addEventListener("click", () => {showDrags(document.getElementById("contacts"))});
 
 // Make the DIV element draggable:
 dragElement(document.getElementById("protocol_dragdiv"));
 dragElement(document.getElementById("message_dragdiv"));
 dragElement(document.getElementById("contacts"));
-
+dragElement(document.getElementById("calendar_dragdiv"));
 
 export function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;

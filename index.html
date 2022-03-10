@@ -27,6 +27,16 @@
             <ol id="protocol_list">
             </ol>
         </div>
+        <div id="calendar_dragdiv" class="dragdiv">
+            <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
+            <div id="calendar_dragdivheader" class="dragdivheader">Calendar</div>
+            <div id="calendar_control">
+                <button id="calendar_button_left"> Left </button>
+                <div id="calendar_year"></div>
+                <button id="calendar_button_right"> Right </button>
+                <button id="calendar_reset_button"> Go to current date</button>
+            </div>
+        </div>
         <div id="message_dragdiv" class="dragdiv">
             <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
             <div id="message_dragdivheader" class="dragdivheader">Messenger</div>
@@ -85,6 +95,7 @@
                 <button id="send" class="reset">Send</button>
             </div>
             <div id="prodmod">  &#9881; </div>
+            <button id="calendar_button" class="reset">Calendar</button>
             <button id="protocol_button" class="reset">Protocol</button>
             <button id="message" class="reset">Messenger</button>
             

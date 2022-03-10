@@ -58,17 +58,19 @@ export class Database {
         //If there is no other possibility, one can recreate the village by this command:
         //this.initDatabase();
         
-
+        //Sets timescales
+        this.months = {"Thex": 42, "Cesyn": 40, "Lugh": 41, "Athos": 45, "Hania": 37, "Civius": 41, "Mannanán": 40, "Nemnir": 42};
         
         //If there is data available, the "json needed" message is cleared
         this.getAllGoods().then((goods)=>{
             if (Object.keys(goods).length > 0) {
                 this.update();
             }
-        })
+        });
 
         //Initializes the Settings button (which wont run without data!)
         this.initSettings();
+        this.protocol_obj = {};
         this.protocol_list = [];
     };
 
@@ -86,7 +88,8 @@ export class Database {
             webhook: 'name,hook',
             adresses: 'name,avatar',
             relations: 'name,relval,treaty,income,problems',
-            basics: 'name,villagename,avatar,calendar'
+            basics: 'name,villagename,avatar,calendar',
+            protocol: 'week,events',
         });
     };
 
@@ -152,7 +155,7 @@ export class Database {
         let time_aux = await this.db.time.get("Time");
         let str = "'"+ basics_aux.villagename +" " + time_aux.week +"/"+time_aux.year + " p.F."+"'";
         root.style.setProperty('--accent-content',str);
-
+        
         //Update all databases gradually
         await this.createStatGoods();
         await this.createStatBuild();
@@ -163,6 +166,7 @@ export class Database {
         await this.initSettings();
         await this.computeProdmodHousings();
         await this.createRelationsTable();
+        this.createCalendar();
 
         //Sets Information of hover over prodmod div
         let div_prodmod = document.getElementById("prodmod");
@@ -172,10 +176,23 @@ export class Database {
             let capDB = await this.db.capacity.get("Capacity");
             let titlestr = "Buffs:"+ (capDB.positive_sources==="" ? "\n---" : capDB.positive_sources) +
                             "\n\nDebuffs:"+ (capDB.negative_sources==="" ? "\n---" : capDB.negative_sources);
-            el.target.title=titlestr
+            el.target.title=titlestr;
         });
         this.createProtocol();
         await this.fillContacts();
+    };
+
+    //Writes events of the current week in database
+    async saveEvents(eventstring){
+        console.log(eventstring);
+        let time_aux = await this.db.time.get("Time"),
+            timestr_today = time_aux.week + "/" + time_aux.year,
+            protocol_aux = await this.db.protocol.get(timestr_today),
+            protocol_aux_entry = "";
+        if (protocol_aux != undefined){
+            protocol_aux_entry = protocol_aux.events + "\n";
+        };
+        await this.db.protocol.put({week: timestr_today, events: protocol_aux_entry+eventstring});
     };
 
     //Initializing Settings page
@@ -196,13 +213,15 @@ export class Database {
                         inpValTot *= -1;
                 };
                 await this.addGood(inputsItems[0].value,+inpValTot,+inputsItems[2].value,+inputsItems[3].value,+inputsItems[4].value);
+                let eventstring = "";
                 if (inpValTot*1 > 0) {
-                    this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were added to the storehouses.")
+                    eventstring = inputsItems[1].value + " " + inputsItems[0].value+" were added to the storehouses.";
                 }
                 else {
-                    this.protocol_list.push(inputsItems[1].value + " " + inputsItems[0].value+" were removed from the storehouses.")
+                    eventstring = inputsItems[1].value + " " + inputsItems[0].value+" were removed from the storehouses.";
                 };
-                    
+                this.protocol_list.push(eventstring);
+                await this.saveEvents(eventstring);
             }
             else {
                 this.errorsnd.play();
@@ -258,7 +277,9 @@ export class Database {
                     this.db.buildings.put({name: inputsBuilds[0].value,cost: costsBuild.value, number: 0,yield_weekly: buildAddInc.value,
                             yield_const: constyield_holder, value: 0,buildable: buildably_variable,variable:manually_variable})
                 }).then(async () => {
-                            this.protocol_list.push("The new building "+inputsBuilds[0].value+" was added to the village.")
+                            let eventstring = "The new building "+inputsBuilds[0].value+" was added to the village."
+                            this.protocol_list.push(eventstring);
+                            await this.saveEvents(eventstring);
                             await this.update();
                             }
                         );  
@@ -285,8 +306,10 @@ export class Database {
                     income_text = relAddInc.firstChild.innerText.replace("Weekly income","")
                 };
                 this.db.relations.put({name: inpNation.value,relval: +inpRel.value, treaty: inpTreaty.value, income: relAddInc.value, problems: ""});
-                this.protocol_list.push("The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
-                " were completed, with an weekly exchange of " + income_text);
+                let eventstring = "The relation with " + inpNation.value + " was updated to " + inpRel.value + " and negotations about " + inpTreaty.value + 
+                " were completed, with an weekly exchange of " + income_text;
+                this.protocol_list.push(eventstring);
+                await this.saveEvents(eventstring);
                 await this.update();
             }
             else {
@@ -658,18 +681,17 @@ export class Database {
     async timeManager() {
         let time = await this.db.time.get("Time");
         if (time.week === 41) {time.year +=1; time.week = 1} else {time.week += 1};
-        let months = {"Thex": 42, "Cesyn": 40, "Lugh": 41, "Athos": 45, "Hania": 37, "Civius": 41, "Mannanán": 40, "Nemnir": 42},
-            days = time.week * 8,
+        let days = time.week * 8,
             j = 0;
         while (days > 8){
-            days -= Object.values(months)[j]
+            days -= Object.values(this.months)[j]
             j += 1
         };
         if (days - 7 < 0) {
             j -= 1
-            days += Object.values(months)[j]
+            days += Object.values(this.months)[j]
         };
-        time.month = Object.keys(months)[j]
+        time.month = Object.keys(this.months)[j]
         time.date = days-7
         
         await this.db.time.put(time)
@@ -679,6 +701,106 @@ export class Database {
         else {
             return time.week -1;
         };        
+    };
+
+    //Creates calendar div
+    async createCalendar() {
+        let time = await this.db.time.get("Time"),
+            protocol_aux = await this.db.protocol.toArray(),
+            protocols = {};
+        protocol_aux.forEach(entry => {
+            protocols[entry.week] = entry;
+        });
+        //Display control section
+        let calyear = document.getElementById("calendar_year"),
+            cal_control_btns = [document.getElementById("calendar_button_left"),
+                                document.getElementById("calendar_button_right")],
+            cal_reset_btn = document.getElementById("calendar_reset_button");
+        calyear.innerText = time.year;
+        this.updateCalendarControls(calyear,cal_control_btns);
+        
+        this.createActualCalendar(calyear,time,protocols);
+
+        cal_control_btns.forEach( el => {el.addEventListener("click", btn => {
+            calyear.innerText = btn.target.value;
+            this.updateCalendarControls(calyear,cal_control_btns);
+            this.createActualCalendar(calyear,time,protocols);
+            });
+        });
+
+        cal_reset_btn.addEventListener("click", () => {
+            calyear.innerText = time.year;
+            this.updateCalendarControls(calyear,cal_control_btns);
+            this.createActualCalendar(calyear,time,protocols);
+        });
+    };
+
+    updateCalendarControls(calyear,cal_control_btns) {
+        cal_control_btns[0].value = String(calyear.innerText-1)
+        cal_control_btns[0].innerText = "⇐ " + cal_control_btns[0].value;
+        cal_control_btns[1].value = calyear.innerText*1+1
+        cal_control_btns[1].innerText = cal_control_btns[1].value + " ⇒";
+    };
+
+    createActualCalendar(calyear,time,protocols){
+        //Clear old calendar
+        let calendar_old = document.getElementById("calendar_table");
+        if (calendar_old != null) {
+            calendar_old.outerHTML ="";
+        };
+        //Create actual calendar
+        let calendar_dragdiv = document.getElementById("calendar_dragdiv"),
+            calendar_table = document.createElement("div");
+        calendar_table.id = "calendar_table";
+        //Insert Header
+        let monthdiv = document.createElement("div"),
+            weekdiv = document.createElement("div");
+        monthdiv.innerText = "Month";
+        weekdiv.innerText = "Calendar weeks"
+        monthdiv.className = "monthdiv";
+        weekdiv.id = "calendar_weeks_header";
+        monthdiv.appendChild(weekdiv);
+        calendar_table.appendChild(monthdiv);
+        //Insert months and weeks
+        let i = 1;
+        let days_from_month_before = 0;
+        Object.keys(this.months).forEach( async month => {
+            let monthdiv = document.createElement("div");
+            monthdiv.className = "monthdiv";
+            monthdiv.innerText = month;
+            i = this.createWeeksforCalendar(monthdiv,(this.months[month]-days_from_month_before)/8,i,time,calyear,protocols);
+            calendar_table.append(monthdiv);
+            days_from_month_before = (8-(this.months[month]-days_from_month_before)%8)%8;
+        });
+        calendar_dragdiv.appendChild(calendar_table);
+    };
+
+    createWeeksforCalendar(parent,weeknumber,calweek,time_aux,calyear_div,protocols){
+        if (weeknumber%1 == 0) {
+            weeknumber--;
+        };
+        for (let week = 1; week <= weeknumber+1; week++){
+            let weekdiv = document.createElement("div");
+            weekdiv.innerText = calweek;
+
+            if (time_aux.week == calweek && time_aux.year == calyear_div.innerText){
+                weekdiv.id = "currentweekdiv";
+            };
+
+            if ((time_aux.week > calweek && time_aux.year == calyear_div.innerText) || time_aux.year > calyear_div.innerText){
+                weekdiv.className = "weekdiv_passed";
+            }
+            else {
+                weekdiv.className = "weekdiv_future";
+            };
+
+            if (protocols[calweek + "/" + calyear_div.innerText]!=undefined) {
+                weekdiv.title = protocols[calweek + "/" + calyear_div.innerText].events;
+            };
+            parent.appendChild(weekdiv);
+            calweek++;    
+        };
+        return calweek;
     };
 
     //Adds the necessary calculations to the weekPassed function
@@ -777,6 +899,7 @@ export class Database {
         });
         let protocol_message = "Week "+week+" passed.";
         this.protocol_list.push(protocol_message);
+        await this.saveEvents(protocol_message);
     };
 
     //Creates default page and computes current value of several assets and in total
@@ -877,7 +1000,9 @@ export class Database {
                 const prev_number = rel.relval;
                 rel.relval = +slct.value;
                 await this.db.relations.put(rel);
-                this.protocol_list.push("The relationship with "+rel.name+" was changed from "+prev_number+" to "+rel.relval+".")
+                let eventstring = "The relationship with "+rel.name+" changed from "+prev_number+" to "+rel.relval+".";
+                this.protocol_list.push(eventstring);
+                await this.saveEvents(eventstring);
                 await this.update();
             });
             container.appendChild(slct);
@@ -1038,7 +1163,9 @@ export class Database {
                     const prev_number = aux.number;
                     aux.number = slct.value*1;
                     await this.db.buildings.put(aux);
-                    this.protocol_list.push("The number of assets in "+aux.name+" was changed from "+prev_number+" to "+aux.number+".")
+                    let eventstring = "The number of assets in "+aux.name+" was changed from "+prev_number+" to "+aux.number+".";
+                    this.protocol_list.push(eventstring);
+                    await this.saveEvents(eventstring);
                     await this.update();
                 });
                 container.appendChild(slct);
@@ -1493,7 +1620,7 @@ export class Database {
     //Builds a certain building "number" times and removes the necessary goods from the database
     async buildBuilding (name, number){
         let snd = document.getElementById("buildingsound");
-        this.db.transaction("rw",this.db.goods,this.db.buildings, async()=>{
+        this.db.transaction("rw",this.db.goods,this.db.buildings,this.db.time,this.db.protocol, async()=>{
             const building = await this.db.buildings.get(name),
                 requiredGoods = Object.keys(building.cost),
                 goods = {};
@@ -1504,10 +1631,12 @@ export class Database {
             }
             snd.play();
             requiredGoods.forEach(resourceName => goods[resourceName].total -= building.cost[resourceName])
-            await this.db.goods.bulkPut(Object.values(goods))
-            building.number += number
-            await this.db.buildings.put(building)
-            this.protocol_list.push("A " + building.name + " was built.")
+            await this.db.goods.bulkPut(Object.values(goods));
+            building.number += number;
+            await this.db.buildings.put(building);
+            let eventstring = "A " + building.name + " was built.";
+            this.protocol_list.push(eventstring);
+            await this.saveEvents(eventstring);
         }).then( async () => { 
             await this.update();
         }).catch(err => {
@@ -1642,7 +1771,9 @@ export class Database {
         let contname = document.getElementById("contact_name"),
             contava = document.getElementById("contact_ava");
         await this.db.adresses.put({name:contname.value,avatar:contava.value});
-        this.protocol_list.push("Added the contact of " + contname.value + ".");
+        let eventstring = "Added the contact of " + contname.value + ".";
+        this.protocol_list.push(eventstring);
+        await this.saveEvents(eventstring);
         contname.value="";
         contava.value="";
         this.update();

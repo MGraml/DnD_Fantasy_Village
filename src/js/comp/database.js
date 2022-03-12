@@ -705,6 +705,11 @@ export class Database {
 
     //Creates calendar div
     async createCalendar() {
+        //Clear old calendar
+        let cal_control = document.getElementById("calendar_control");
+        if (cal_control != null) {
+            cal_control.innerHTML ="";
+        };
         let time = await this.db.time.get("Time"),
             protocol_aux = await this.db.protocol.toArray(),
             protocols = {};
@@ -712,19 +717,31 @@ export class Database {
             protocols[entry.week] = entry;
         });
         //Display control section
-        let calyear = document.getElementById("calendar_year"),
-            cal_control_btns = [document.getElementById("calendar_button_left"),
-                                document.getElementById("calendar_button_right")],
-            cal_reset_btn = document.getElementById("calendar_reset_button");
+        let calyear = document.createElement("div"),
+            cal_control_btns = [document.createElement("button"),
+                                document.createElement("button")],
+            cal_reset_btn = document.createElement("button");
+        calyear.id = "calendar_year";
+        cal_control_btns[0].id = "calendar_button_left";
+        cal_control_btns[1].id = "calendar_button_right";
+        cal_reset_btn.id = "calendar_reset_button";
+        cal_reset_btn.innerText = "Go to current date";
+
         calyear.innerText = time.year;
-        this.updateCalendarControls(calyear,cal_control_btns);
         
+        cal_control.appendChild(cal_control_btns[0]);
+        cal_control.appendChild(calyear);
+        cal_control.appendChild(cal_control_btns[1]);
+        cal_control.appendChild(cal_reset_btn);
+
+        this.updateCalendarControls(calyear,cal_control_btns);
         this.createActualCalendar(calyear,time,protocols);
 
-        cal_control_btns.forEach( el => {el.addEventListener("click", btn => {
-            calyear.innerText = btn.target.value;
-            this.updateCalendarControls(calyear,cal_control_btns);
-            this.createActualCalendar(calyear,time,protocols);
+        cal_control_btns.forEach( el => {
+            el.addEventListener("click", (btn) => {
+                calyear.innerText = btn.target.value;
+                this.updateCalendarControls(calyear,cal_control_btns);
+                this.createActualCalendar(calyear,time,protocols);
             });
         });
 

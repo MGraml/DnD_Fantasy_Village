@@ -197,8 +197,10 @@ export class Database {
 
     //Initializing Settings page
     async initSettings() {
-        let container = document.getElementById("settings");
+        let container = document.getElementById("settings"),
+            soundcredits = document.getElementById("soundcredits").cloneNode(true);
         container.innerHTML="";
+        
         //Manage line with items in settings screen
         await this.createItemsAdd();
         let add = document.getElementById("AddingGoods"),
@@ -318,6 +320,7 @@ export class Database {
         });
 
         container.appendChild(document.createElement("p"));
+        container.appendChild(soundcredits);
     };
 
     //Create menu for adding new relations

@@ -2,6 +2,13 @@
   color: white;
 }
 
+#soundcredits > a{
+  color:honeydew;
+}
+#soundcredits > a:visited {
+  color:rgb(196, 196, 196);
+}
+
 table {
     border-collapse: separate;
     border-spacing: 0em 0px;
